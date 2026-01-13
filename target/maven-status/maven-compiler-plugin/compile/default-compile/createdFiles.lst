@@ -1,4 +1,7 @@
-com/z01/Post.class
+com/z01/UserRepository.class
 com/z01/App.class
-com/z01/PostRepository.class
 com/z01/PostController.class
+com/z01/Post.class
+com/z01/PostRepository.class
+com/z01/AuthController.class
+com/z01/User.class
