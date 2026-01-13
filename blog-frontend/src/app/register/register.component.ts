@@ -1,24 +1,31 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router'; // <--- 1. Add this import
+import { Router, RouterLink } from '@angular/router'; // 1. Add Router here
 import { AuthService } from '../auth.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [FormsModule, RouterLink],
-  templateUrl: './register.component.html', // <--- CHECK THIS PATH
+  templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
 export class RegisterComponent {
-  user = { username: '', password: '', email: '' };
+  user = { username: '', email: '', password: '' };
 
-  constructor(private authService: AuthService) {}
+  // 2. Add 'private router: Router' to the constructor
+  constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit() {
     this.authService.register(this.user).subscribe({
-      next: (response) => alert(response),
-      error: (err) => console.error('Registration failed', err)
+      next: (response) => {
+        alert(response); // "User registered successfully!"
+        this.router.navigate(['/login']); // 3. This line moves the user!
+      },
+      error: (err) => {
+        alert("Registration failed");
+        console.error(err);
+      }
     });
   }
 }
