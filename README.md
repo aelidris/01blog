@@ -42,3 +42,7 @@ Email: test@test.com
 Password: 12345
 
 Click Register.
+
+
+
+We can use H2 database (that based on store at the memory) after finishing we can easly changing to PostgreSQL or MySQL
