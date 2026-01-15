@@ -1,9 +1,9 @@
 package com.z01;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import java.util.List;
 
-@Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
-    // JpaRepository already has methods like .save(), .findAll(), and .delete()
+    // Find all posts by a specific user for their "Profile/Block" page
+    List<Post> findByUserId(Long userId);
 }

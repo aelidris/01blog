@@ -1,22 +1,35 @@
 package com.z01;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
-@Entity // This tells Spring: "Create a table for this class"
-@Table(name = "posts") // This specifies the table name
+@Entity
+@Table(name = "POSTS")
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
-    private String content;
+    private String description;
+    private String mediaUrl; // For images or videos
+    private LocalDateTime timestamp; // Required by the subject
 
-    // Standard Getters and Setters (Important!)
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user; // Links the post to a specific user
+
+    // Constructors
+    public Post() {
+        this.timestamp = LocalDateTime.now(); // Set time automatically
+    }
+
+    // Getters and Setters
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public String getMediaUrl() { return mediaUrl; }
+    public void setMediaUrl(String mediaUrl) { this.mediaUrl = mediaUrl; }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 }
