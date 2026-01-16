@@ -1,16 +1,43 @@
-<div class="register-container">
-  <h2>Welcome to 01Blog!</h2>
+<div class="home-container">
+  <h2 class="welcome-title">Welcome to 01Blog!</h2>
   
-  <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+<div class="create-post-box">
     <h3>Create a New Post</h3>
-    <textarea [(ngModel)]="ngModel_desc" placeholder="What's on your mind?" style="width: 100%; height: 60px;"></textarea>
-    <input type="text" [(ngModel)]="ngModel_media" placeholder="Image URL" style="width: 100%; margin: 10px 0;">
-    <button (click)="submitPost()" style="background: #28a745; color: white; padding: 10px;">Publish</button>
-  </div>
+    <input type="text" [(ngModel)]="ngModel_title" placeholder="Post Title" class="post-input title-input">
+    <textarea [(ngModel)]="ngModel_desc" placeholder="What's on your mind?" class="post-textarea"></textarea>
+    <input type="file" (change)="onFileSelected($event)" accept="image/*,video/*" class="post-input">
+           
+    <button (click)="submitPost()" class="btn btn-publish">Publish Post</button>
+</div>
 
   <hr>
 
-  
+  <div class="feed-container">
+    <h3>Your Feed</h3>
+    
+    @for (post of posts; track post.id) {
+      <div class="post-card">
+        <p class="post-author"><strong>&#64;{{ post.user?.username }}</strong></p>
+        <h4 class="post-title">{{ post.title }}</h4>
+        <p class="post-desc">{{ post.description }}</p>
+        
+        @if (post.mediaUrl) {
+  <div class="media-container">
+    @if (isVideo(post.mediaUrl)) {
+      <video [src]="post.mediaUrl" controls class="post-media"></video>
+    } 
+    @else {
+      <img [src]="post.mediaUrl" class="post-media" alt="Post content">
+    }
+  </div>
+}
+        
+        <p class="post-date"><small>Posted on: {{ post.timestamp | date:'medium' }}</small></p>
+      </div>
+    } @empty {
+      <p class="empty-msg">Your feed is empty. Start blogging!</p>
+    }
+  </div>
 
-  <button (click)="logout()" style="background: #ff4d4d; color: white; margin-top: 20px;">Logout</button>
+  <button (click)="logout()" class="btn btn-logout">Logout</button>
 </div>

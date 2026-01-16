@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common'; 
 import { Router } from '@angular/router';
-import { AuthService } from '../auth.service'; // Ensure this path is correct
+import { AuthService } from '../auth.service'; 
 import { Post } from '../post.model';
 
 @Component({
@@ -10,13 +10,13 @@ import { Post } from '../post.model';
   standalone: true,
   imports: [FormsModule, CommonModule], 
   templateUrl: './home.component.html',
-  styleUrls: ['../register/register.component.css']
+  styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit {
-  // 1. These variables MUST match the [(ngModel)] names in your HTML
+  ngModel_title: string = '';
   ngModel_desc: string = '';
-  ngModel_media: string = '';
-  posts: Post[] = []; 
+  selectedFile: File | null = null; // New variable to store the file
+  posts: any[] = []; 
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -28,38 +28,54 @@ export class HomeComponent implements OnInit {
     this.authService.getPosts().subscribe({
       next: (data) => {
         this.posts = data;
-        console.log("Posts loaded:", data);
       },
       error: (err) => console.error("Error loading posts", err)
     });
   }
 
-  submitPost() {
+  // Inside your HomeComponent class
+isVideo(url: string): boolean {
+  if (!url) return false;
+  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
+  return videoExtensions.some(ext => url.toLowerCase().endsWith(ext));
+}
+
+  // Captures the file when the user selects it from their computer
+
+onFileSelected(event: any) {
+    this.selectedFile = event.target.files[0]; // Stores the binary file from your computer
+}
+
+submitPost() {
     const loggedInUser = this.authService.getCurrentUser();
     
+    // Only block if the user isn't logged in
     if (!loggedInUser) {
-      alert("Please login first");
-      this.router.navigate(['/login']);
-      return;
+        alert("Please log in first.");
+        this.router.navigate(['/login']);
+        return;
     }
 
-    // 2. Use the ngModel variables to create the post
-    const postToSave: Post = {
-      description: this.ngModel_desc,
-      mediaUrl: this.ngModel_media,
-      user: { username: loggedInUser.username }
-    };
+    const formData = new FormData();
+    formData.append('title', this.ngModel_title);
+    formData.append('description', this.ngModel_desc);
+    formData.append('username', loggedInUser.username);
+    
+    // Only append the file if the user actually chose one
+    if (this.selectedFile) {
+        formData.append('file', this.selectedFile);
+    }
 
-    this.authService.createPost(postToSave).subscribe({
-      next: (res) => {
-        // 3. Reset the form variables
-        this.ngModel_desc = '';
-        this.ngModel_media = '';
-        this.loadPosts(); // Refresh the feed immediately
-      },
-      error: (err) => alert("Post failed")
+    this.authService.uploadPost(formData).subscribe({
+        next: () => {
+            this.ngModel_title = '';
+            this.ngModel_desc = '';
+            this.selectedFile = null;
+            this.loadPosts();
+        },
+        error: (err) => alert("Upload failed. Make sure the backend allows missing files.")
     });
-  }
+}
 
   logout() {
     this.router.navigate(['/login']);

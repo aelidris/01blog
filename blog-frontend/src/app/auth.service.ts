@@ -37,6 +37,10 @@ export class AuthService {
     return this.http.post<Post>(this.postsUrl, post);
   }
 
+  uploadPost(formData: FormData) {
+  return this.http.post('http://localhost:8080/api/posts/upload', formData);
+}
+
   getPosts(): Observable<Post[]> {
   return this.http.get<Post[]>('http://localhost:8080/api/posts');
 }

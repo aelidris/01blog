@@ -1,0 +1,82 @@
+/* Container & Layout */
+.home-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.welcome-title {
+  text-align: center;
+}
+
+/* Create Post Form */
+.create-post-box {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+}
+
+.post-input, .post-textarea {
+  width: 100%;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  padding: 8px;
+  box-sizing: border-box; /* Ensures padding doesn't break width */
+}
+
+.title-input {
+  font-weight: bold;
+}
+
+.post-textarea {
+  height: 80px;
+}
+
+/* Feed Scrolling Fix */
+.feed-container {
+  margin-top: 20px;
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+/* Post Cards */
+.post-card {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  text-align: left;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.post-author { margin: 0; }
+.post-title { margin: 5px 0; color: #333; }
+.post-desc { margin: 10px 0; }
+.post-media {
+  max-width: 100%;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  display: block;
+}
+.post-date { margin: 0; color: gray; }
+
+.empty-msg { text-align: center; color: gray; }
+
+/* Buttons */
+.btn {
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  color: white;
+  font-weight: bold;
+}
+
+.btn-publish { background-color: #28a745; }
+.btn-logout { background-color: #ff4d4d; margin-top: 20px; }

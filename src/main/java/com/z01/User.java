@@ -3,6 +3,7 @@ package com.z01;
 import jakarta.persistence.*;
 import java.util.List; // Add this import
 import com.fasterxml.jackson.annotation.JsonIgnore; // Highly recommended
+import com.fasterxml.jackson.annotation.JsonProperty; // Import this
 
 @Entity
 @Table(name = "users")
@@ -15,6 +16,7 @@ public class User {
     private String username;
 
     @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     private String email;

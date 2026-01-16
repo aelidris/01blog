@@ -9,7 +9,7 @@ public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    private String title; // Add this field
     private String description;
     private String mediaUrl; // For images or videos
     private LocalDateTime timestamp; // Required by the subject
@@ -32,4 +32,7 @@ public class Post {
     public LocalDateTime getTimestamp() { return timestamp; }
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+    // Update your getters and setters
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 }
