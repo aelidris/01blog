@@ -1,41 +1,62 @@
 <div class="home-container">
   <h2 class="welcome-title">Welcome to 01Blog!</h2>
   
-<div class="create-post-box">
+  <div class="create-post-box">
     <h3>Create a New Post</h3>
     <input type="text" [(ngModel)]="ngModel_title" placeholder="Post Title" class="post-input title-input">
     <textarea [(ngModel)]="ngModel_desc" placeholder="What's on your mind?" class="post-textarea"></textarea>
     <input type="file" (change)="onFileSelected($event)" accept="image/*,video/*" class="post-input">
-           
     <button (click)="submitPost()" class="btn btn-publish">Publish Post</button>
-</div>
+  </div>
 
   <hr>
 
   <div class="feed-container">
-    <h3>Your Feed</h3>
+    <div class="feed-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <h3>Your Feed</h3>
+      <div class="feed-toggle">
+        <button [class.active]="showFollowedOnly" (click)="toggleFeed(true)" class="btn-toggle">My Feed</button>
+        <button [class.active]="!showFollowedOnly" (click)="toggleFeed(false)" class="btn-toggle">Discover</button>
+      </div>
+    </div>
     
     @for (post of posts; track post.id) {
       <div class="post-card">
-        <p class="post-author"><strong>&#64;{{ post.user?.username }}</strong></p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <p class="post-author"><strong>&#64;{{ post.user?.username }}</strong></p>
+          
+          <div *ngIf="post.user?.username !== currentUsername">
+            <button *ngIf="!isFollowing(post.user.username)" 
+                    (click)="followUser(post.user.username)"
+                    class="btn-follow">
+              Follow
+            </button>
+            <button *ngIf="isFollowing(post.user.username)" 
+                    (click)="unfollowUser(post.user.username)"
+                    class="btn-unfollow">
+              Unfollow
+            </button>
+          </div>
+        </div>
+
         <h4 class="post-title">{{ post.title }}</h4>
         <p class="post-desc">{{ post.description }}</p>
         
         @if (post.mediaUrl) {
-  <div class="media-container">
-    @if (isVideo(post.mediaUrl)) {
-      <video [src]="post.mediaUrl" controls class="post-media"></video>
-    } 
-    @else {
-      <img [src]="post.mediaUrl" class="post-media" alt="Post content">
-    }
-  </div>
-}
+          <div class="media-container">
+            @if (isVideo(post.mediaUrl)) {
+              <video [src]="post.mediaUrl" controls class="post-media"></video>
+            } 
+            @else {
+              <img [src]="post.mediaUrl" class="post-media" alt="Post content">
+            }
+          </div>
+        }
         
         <p class="post-date"><small>Posted on: {{ post.timestamp | date:'medium' }}</small></p>
       </div>
     } @empty {
-      <p class="empty-msg">Your feed is empty. Start blogging!</p>
+      <p class="empty-msg">No posts found. {{ showFollowedOnly ? 'Follow someone to see their posts!' : 'Be the first to post!' }}</p>
     }
   </div>
 

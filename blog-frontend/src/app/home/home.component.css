@@ -80,3 +80,22 @@
 
 .btn-publish { background-color: #28a745; }
 .btn-logout { background-color: #ff4d4d; margin-top: 20px; }
+
+.btn-toggle {
+  background: #eee;
+  border: none;
+  padding: 5px 15px;
+  cursor: pointer;
+}
+.btn-toggle.active {
+  background: #007bff;
+  color: white;
+}
+.btn-unfollow {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}

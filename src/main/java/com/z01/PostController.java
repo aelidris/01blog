@@ -1,5 +1,9 @@
 package com.z01;
 
+import org.springframework.http.ResponseEntity; // Fixes "cannot find symbol: class ResponseEntity"
+import java.util.Set;     // Fixes "cannot find symbol: class Set"
+import java.util.HashSet; // Fixes "cannot find symbol: class HashSet"
+import java.util.ArrayList; // Good to have for empty list returns
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
@@ -75,5 +79,57 @@ public Post uploadPost(
     post.setUser(user);
 
     return postRepository.save(post);
+}
+
+@PostMapping("/{username}/follow")
+public ResponseEntity<?> followUser(@PathVariable String username, @RequestParam String currentUsername) {
+    User userToFollow = userRepository.findByUsername(username);
+    User currentUser = userRepository.findByUsername(currentUsername);
+
+    if (userToFollow != null && currentUser != null) {
+        currentUser.getFollowing().add(userToFollow);
+        userRepository.save(currentUser);
+        return ResponseEntity.ok("Followed successfully");
+    }
+    return ResponseEntity.badRequest().body("User not found");
+}
+
+@GetMapping("/following/{username}")
+public ResponseEntity<Set<User>> getFollowing(@PathVariable String username) {
+    User user = userRepository.findByUsername(username);
+    if (user != null) {
+        // This returns the set of users that 'username' follows
+        return ResponseEntity.ok(user.getFollowing());
+    }
+    return ResponseEntity.notFound().build();
+}
+
+@PostMapping("/{username}/unfollow")
+public ResponseEntity<?> unfollowUser(@PathVariable String username, @RequestParam String currentUsername) {
+    User userToUnfollow = userRepository.findByUsername(username);
+    User currentUser = userRepository.findByUsername(currentUsername);
+
+    if (userToUnfollow != null && currentUser != null) {
+        currentUser.getFollowing().remove(userToUnfollow); // Remove the user from the set
+        userRepository.save(currentUser);
+        return ResponseEntity.ok("Unfollowed successfully");
+    }
+    return ResponseEntity.badRequest().body("User not found");
+}
+
+@GetMapping("/feed/{username}")
+public List<Post> getSubscribedFeed(@PathVariable String username) {
+    User currentUser = userRepository.findByUsername(username);
+    if (currentUser == null) return new ArrayList<>();
+
+    Set<User> following = currentUser.getFollowing();
+    
+    // If the user isn't following anyone yet, show an empty list or their own posts
+    if (following.isEmpty()) {
+        // Option: return postRepository.findByUser(currentUser); 
+        return new ArrayList<>();
+    }
+
+    return postRepository.findByUserInOrderByTimestampDesc(following);
 }
 }
