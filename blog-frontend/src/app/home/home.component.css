@@ -1,101 +1,196 @@
 /* Container & Layout */
 .home-container {
-  max-width: 600px;
+  max-width: 650px; /* Slightly wider for better media viewing */
   margin: 0 auto;
   padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f0f2f5; /* Light grey background to make cards pop */
+  min-height: 100vh;
 }
 
 .welcome-title {
   text-align: center;
+  color: #1c1e21;
+  margin-bottom: 30px;
 }
 
 /* Create Post Form */
 .create-post-box {
-  background: #f9f9f9;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  border: 1px solid #ddd;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .post-input, .post-textarea {
   width: 100%;
-  margin-bottom: 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  padding: 8px;
-  box-sizing: border-box; /* Ensures padding doesn't break width */
-}
-
-.title-input {
-  font-weight: bold;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
 .post-textarea {
-  height: 80px;
+  height: 100px;
+  resize: none; /* Prevents user from breaking layout */
 }
 
-/* Feed Scrolling Fix */
+/* Media Preview Styling */
+.media-preview {
+  margin: 15px 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.preview-thumb {
+  max-width: 100%;
+  max-height: 250px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Feed & Cards */
 .feed-container {
   margin-top: 20px;
-  max-height: 600px;
-  overflow-y: auto;
-  padding-right: 5px;
 }
 
-/* Post Cards */
 .post-card {
-  border: 1px solid #ddd;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  text-align: left;
   background: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
 }
 
-.post-author { margin: 0; }
-.post-title { margin: 5px 0; color: #333; }
-.post-desc { margin: 10px 0; }
-.post-media {
-  max-width: 100%;
-  border-radius: 5px;
-  margin-bottom: 10px;
-  display: block;
+.post-card:hover {
+  transform: translateY(-3px);
 }
-.post-date { margin: 0; color: gray; }
 
-.empty-msg { text-align: center; color: gray; }
+/* Inline Edit Form */
+.edit-form-container {
+  background: #f0f7ff;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #007bff;
+  margin-bottom: 15px;
+}
 
-/* Buttons */
-.btn {
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
+.edit-input, .edit-textarea {
   width: 100%;
-  color: white;
-  font-weight: bold;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: inherit;
 }
 
-.btn-publish { background-color: #28a745; }
-.btn-logout { background-color: #ff4d4d; margin-top: 20px; }
+.edit-actions {
+  display: flex;
+  gap: 10px;
+}
 
-.btn-toggle {
-  background: #eee;
+/* Post Content */
+.post-title {
+  font-size: 1.4rem;
+  margin: 10px 0;
+  color: #1c1e21;
+}
+
+.post-desc {
+  font-size: 1rem;
+  color: #4b4f56;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+.post-media {
+  border-radius: 8px;
+  max-height: 500px;
+  width: 100%;
+  object-fit: contain;
+  background: #000; /* Black bars for videos with different aspect ratios */
+  margin: 10px 0;
+}
+
+/* Owner & Follow Buttons */
+.owner-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.btn-action {
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: 1px solid #ccd0d5;
+  background: #f5f6f7;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-danger { color: #fa383e; }
+.btn-save { background: #28a745; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; }
+.btn-cancel { background: #6c757d; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; }
+
+.btn-follow {
+  background-color: #e7f3ff;
+  color: #1877f2;
   border: none;
-  padding: 5px 15px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
 }
-.btn-toggle.active {
-  background: #007bff;
-  color: white;
-}
+
 .btn-unfollow {
-  background-color: #ff4d4d;
+  background-color: #f0f2f5;
+  color: #050505;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Global Buttons */
+.btn-publish {
+  background-color: #1877f2;
   color: white;
   border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
+  padding: 12px;
+  border-radius: 8px;
+  width: 100%;
+  font-weight: bold;
+  font-size: 1rem;
   cursor: pointer;
+}
+
+.btn-logout {
+  background-color: #f02849;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  width: 100%;
+  margin-top: 30px;
+  cursor: pointer;
+}
+
+.feed-toggle .btn-toggle {
+  border: none;
+  padding: 8px 20px;
+  cursor: pointer;
+  background: #ddd;
+}
+
+.feed-toggle .btn-toggle.active {
+  background: #1877f2;
+  color: white;
 }

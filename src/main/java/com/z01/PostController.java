@@ -86,6 +86,23 @@ public Post uploadPost(
     return postRepository.save(post);
 }
 
+// 1. Delete a post by its ID
+@DeleteMapping("/{id}")
+public ResponseEntity<?> deletePost(@PathVariable Long id) {
+    postRepository.deleteById(id);
+    return ResponseEntity.ok().build();
+}
+
+// 2. Edit a post's title and description
+@PutMapping("/{id}")
+public Post updatePost(@PathVariable Long id, @RequestBody Post updatedPost) {
+    return postRepository.findById(id).map(post -> {
+        post.setTitle(updatedPost.getTitle());
+        post.setDescription(updatedPost.getDescription());
+        return postRepository.save(post);
+    }).orElseThrow(() -> new RuntimeException("Post not found"));
+}
+
 @PostMapping("/{username}/follow")
 public ResponseEntity<?> followUser(@PathVariable String username, @RequestParam String currentUsername) {
     User userToFollow = userRepository.findByUsername(username);

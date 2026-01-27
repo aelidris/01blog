@@ -5,15 +5,14 @@
     <h3>Create a New Post</h3>
     <input type="text" [(ngModel)]="ngModel_title" placeholder="Post Title" class="post-input title-input">
     <textarea [(ngModel)]="ngModel_desc" placeholder="What's on your mind?" class="post-textarea"></textarea>
-    <input type="file" (change)="onFileSelected($event)" accept="image/*,video/*" class="post-input">
+    
+    <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*,video/*" class="post-input">
     
     <div *ngIf="previewUrl" class="media-preview">
-  <p>Preview:</p>
-  
-  <img *ngIf="!isVideo(selectedFile?.name || '')" [src]="previewUrl" width="200">
-  
-  <video *ngIf="isVideo(selectedFile?.name || '')" [src]="previewUrl" width="200" controls></video>
-</div>
+      <p><small>Preview:</small></p>
+      <img *ngIf="!isVideo(selectedFile?.name || '')" [src]="previewUrl" class="preview-thumb">
+      <video *ngIf="isVideo(selectedFile?.name || '')" [src]="previewUrl" class="preview-thumb" controls></video>
+    </div>
 
     <button (click)="submitPost()" class="btn btn-publish">Publish Post</button>
   </div>
@@ -21,7 +20,7 @@
   <hr>
 
   <div class="feed-container">
-    <div class="feed-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div class="feed-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <h3>Your Feed</h3>
       <div class="feed-toggle">
         <button [class.active]="showFollowedOnly" (click)="toggleFeed(true)" class="btn-toggle">My Feed</button>
@@ -31,7 +30,8 @@
     
     @for (post of posts; track post.id) {
       <div class="post-card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        
+        <div class="post-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
           <p class="post-author"><strong>&#64;{{ post.user?.username }}</strong></p>
           
           <div *ngIf="post.user?.username !== currentUsername">
@@ -48,11 +48,27 @@
           </div>
         </div>
 
-        <h4 class="post-title">{{ post.title }}</h4>
-        <p class="post-desc">{{ post.description }}</p>
-        
+        <div *ngIf="editingPostId === post.id; else viewMode" class="edit-form-container">
+          <input [(ngModel)]="editTitle" class="edit-input" placeholder="Title">
+          <textarea [(ngModel)]="editDesc" class="edit-textarea" placeholder="Description"></textarea>
+          <div class="edit-actions">
+            <button (click)="saveEdit(post)" class="btn-save">Save</button>
+            <button (click)="cancelEdit()" class="btn-cancel">Cancel</button>
+          </div>
+        </div>
+
+        <ng-template #viewMode>
+          <h4 class="post-title">{{ post.title }}</h4>
+          <p class="post-desc">{{ post.description }}</p>
+          
+          <div *ngIf="post.user?.username === currentUsername" class="owner-controls">
+            <button (click)="startEdit(post)" class="btn-action">Edit</button>
+            <button (click)="deletePost(post.id)" class="btn-action btn-danger">Delete</button>
+          </div>
+        </ng-template>
+
         @if (post.mediaUrl) {
-          <div class="media-container">
+          <div class="media-container" style="margin-top: 15px;">
             @if (isVideo(post.mediaUrl)) {
               <video [src]="post.mediaUrl" controls class="post-media"></video>
             } 

@@ -172,6 +172,42 @@ resetForm() {
   this.selectedFile = null;
 }
 
+deletePost(postId: number) {
+  if (confirm("Are you sure you want to delete this post?")) {
+    this.authService.deletePost(postId).subscribe({
+      next: () => {
+        alert("Post deleted");
+        this.loadPosts(); // Refresh the feed
+      },
+      error: (err) => console.error("Delete failed", err)
+    });
+  }
+}
+
+editingPostId: number | null = null; // Tracks the ID of the post in "Edit Mode"
+editTitle: string = '';
+editDesc: string = '';
+
+startEdit(post: any) {
+  this.editingPostId = post.id;
+  this.editTitle = post.title;
+  this.editDesc = post.description;
+}
+
+cancelEdit() {
+  this.editingPostId = null;
+}
+
+saveEdit(post: any) {
+  const updatedData = { ...post, title: this.editTitle, description: this.editDesc };
+  this.authService.updatePost(post.id, updatedData).subscribe({
+    next: () => {
+      this.editingPostId = null;
+      this.loadPosts();
+    }
+  });
+}
+
   logout() {
   this.authService.logout(); // The red line should disappear now!
   this.currentUsername = '';
