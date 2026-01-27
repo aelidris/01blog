@@ -6,6 +6,15 @@
     <input type="text" [(ngModel)]="ngModel_title" placeholder="Post Title" class="post-input title-input">
     <textarea [(ngModel)]="ngModel_desc" placeholder="What's on your mind?" class="post-textarea"></textarea>
     <input type="file" (change)="onFileSelected($event)" accept="image/*,video/*" class="post-input">
+    
+    <div *ngIf="previewUrl" class="media-preview">
+  <p>Preview:</p>
+  
+  <img *ngIf="!isVideo(selectedFile?.name || '')" [src]="previewUrl" width="200">
+  
+  <video *ngIf="isVideo(selectedFile?.name || '')" [src]="previewUrl" width="200" controls></video>
+</div>
+
     <button (click)="submitPost()" class="btn btn-publish">Publish Post</button>
   </div>
 

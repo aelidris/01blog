@@ -119,9 +119,16 @@ unfollowUser(targetUsername: string) {
     return videoExtensions.some(ext => url.toLowerCase().endsWith(ext));
   }
 
+  previewUrl: string | null = null; // Variable to store the temp URL
+
   onFileSelected(event: any) {
-    this.selectedFile = event.target.files[0];
+  this.selectedFile = event.target.files[0];
+  
+  if (this.selectedFile) {
+    // Create a temporary local URL for the preview
+    this.previewUrl = URL.createObjectURL(this.selectedFile);
   }
+}
 
   submitPost() {
   const loggedInUser = this.authService.getCurrentUser();
@@ -146,6 +153,7 @@ unfollowUser(targetUsername: string) {
     next: () => {
       alert("Post successful!");
       this.resetForm();
+      this.previewUrl = null; // Clear the preview
       this.loadPosts(); 
     },
     error: (err) => {
