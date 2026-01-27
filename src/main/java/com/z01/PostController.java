@@ -57,22 +57,27 @@ public Post uploadPost(
     @RequestParam("title") String title,
     @RequestParam("description") String description,
     @RequestParam("username") String username,
-    @RequestParam(value = "file", required = false) MultipartFile file) throws IOException { // Add required = false
+    @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
 
     Post post = new Post();
     post.setTitle(title);
     post.setDescription(description);
     
-    // Only process the file if it exists
     if (file != null && !file.isEmpty()) {
+        // Use the project's root directory
         String uploadDir = System.getProperty("user.dir") + "/uploads/";
+        File directory = new File(uploadDir);
+        
+        // Create the folder if it doesn't exist to prevent the 500 error
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         Path filePath = Paths.get(uploadDir + fileName);
         Files.copy(file.getInputStream(), filePath);
         
         post.setMediaUrl("http://localhost:8080/uploads/" + fileName);
-    } else {
-        post.setMediaUrl(null); // No image for this post
     }
 
     User user = userRepository.findByUsername(username);

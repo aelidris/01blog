@@ -113,34 +113,45 @@ unfollowUser(targetUsername: string) {
   }
 
   submitPost() {
-    const loggedInUser = this.authService.getCurrentUser();
-    if (!loggedInUser) {
-      this.router.navigate(['/login']);
-      return;
-    }
+  const loggedInUser = this.authService.getCurrentUser();
+  if (!loggedInUser) {
+    this.router.navigate(['/login']);
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append('title', this.ngModel_title);
-    formData.append('description', this.ngModel_desc);
-    formData.append('username', loggedInUser.username);
-    
-    if (this.selectedFile) {
-      formData.append('file', this.selectedFile);
-    }
+  const formData = new FormData();
+  // Ensure these property names match exactly what your 
+  // PostController @RequestParam expects!
+  formData.append('title', this.ngModel_title);
+  formData.append('description', this.ngModel_desc);
+  formData.append('username', loggedInUser.username);
+  
+  if (this.selectedFile) {
+    formData.append('file', this.selectedFile);
+    console.log("Uploading file:", this.selectedFile.name, "Size:", this.selectedFile.size);
+  }
 
-    this.authService.uploadPost(formData).subscribe({
+ this.authService.uploadPost(formData).subscribe({
     next: () => {
       alert("Post successful!");
-      this.selectedFile = null; // Clear the file
-      this.loadPosts();
+      this.resetForm();
+      this.loadPosts(); 
     },
     error: (err) => {
-      alert("Post failed: File might be too large");
-      this.selectedFile = null; // Reset so the next post isn't blocked
-      console.error(err);
+      console.error("Server Error:", err); // This is what showed the 500 error
+      alert("Post failed. Check if the 'uploads' folder exists in your project root.");
+      this.resetForm(); // Reset even on error to "un-freeze" the UI
+      this.loadPosts(); // Reload to show existing posts again
     }
   });
-  }
+
+}
+
+resetForm() {
+  this.ngModel_title = '';
+  this.ngModel_desc = '';
+  this.selectedFile = null;
+}
 
   logout() {
   this.authService.logout(); // The red line should disappear now!
