@@ -60,13 +60,17 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  // Fetches the list of usernames the current user follows
   loadFollowing() {
-    this.authService.getUserFollowing(this.currentUsername).subscribe({
-      next: (list:any) => this.followingList = list,
-      error: (err) => console.error("Could not load following list", err)
-    });
-  }
+  this.authService.getUserFollowing(this.currentUsername).subscribe({
+    next: (list: any) => {
+      this.followingList = list;
+    },
+    error: (err) => {
+      console.error("Backend recursion crash detected", err);
+      this.followingList = []; // Reset to empty so isFollowing() doesn't break
+    }
+  });
+}
 
   // Checks if a specific username is in your following list
   isFollowing(username: string): boolean {
@@ -82,13 +86,20 @@ export class HomeComponent implements OnInit {
   });
 }
 
-  followUser(targetUsername: string) {
+ followUser(targetUsername: string) {
   this.authService.followUser(targetUsername, this.currentUsername).subscribe({
     next: () => {
-      console.log("Followed " + targetUsername);
-      this.loadFollowing(); // IMPORTANT: This refreshes your local list
+      this.loadFollowing(); 
+      this.loadPosts();
     },
-    error: (err: any) => alert("Could not follow user")
+    error: (err: any) => {
+      // Even if there is a network error, check the DB again
+      console.warn("Network hiccup, but checking DB status anyway...");
+      setTimeout(() => {
+        this.loadFollowing();
+        this.loadPosts();
+      }, 500); 
+    }
   });
 }
 

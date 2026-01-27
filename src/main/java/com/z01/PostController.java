@@ -92,8 +92,12 @@ public ResponseEntity<?> followUser(@PathVariable String username, @RequestParam
     User currentUser = userRepository.findByUsername(currentUsername);
 
     if (userToFollow != null && currentUser != null) {
-        currentUser.getFollowing().add(userToFollow);
-        userRepository.save(currentUser);
+        // Prevent adding the same follow twice to avoid DB errors
+        if (!currentUser.getFollowing().contains(userToFollow)) {
+            currentUser.getFollowing().add(userToFollow);
+            // Use saveAndFlush to force the DB to update IMMEDIATELY
+            userRepository.saveAndFlush(currentUser); 
+        }
         return ResponseEntity.ok("Followed successfully");
     }
     return ResponseEntity.badRequest().body("User not found");

@@ -26,18 +26,19 @@ public class User {
     // 1. Requirement: Role-based access (user vs admin)
     private String role = "USER"; 
 
-    // 2. Requirement: Link to posts
-    // JsonIgnore prevents infinite loops when the API sends data to Angular
+    /// 1. Prevent infinite loop on posts
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @JsonIgnore 
     private List<Post> posts;
 
-    @ManyToMany
+    // 2. Prevent infinite loop on followings
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
       name = "user_subscriptions",
       joinColumns = @JoinColumn(name = "user_id"),
       inverseJoinColumns = @JoinColumn(name = "following_id")
     )
+    @JsonIgnore // ADD THIS HERE
     private Set<User> following = new HashSet<>();
 
     // Getters and Setters
