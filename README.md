@@ -164,3 +164,9 @@ The app will be available at `http://localhost:4200`.
 - ✅ Admin panel: manage posts (hide/unhide/delete)
 - ✅ Admin panel: handle reports (resolve/dismiss)
 - ✅ Responsive UI with Angular Material
+
+
+# Start with Docker
+```
+docker compose up --build
+```

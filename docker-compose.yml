@@ -1,0 +1,36 @@
+services:
+  postgres-db:
+    image: postgres:16
+    container_name: blog-db
+    environment:
+      POSTGRES_DB: blog01
+      POSTGRES_USER: aelidris
+      POSTGRES_PASSWORD: 01blog_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend-api:
+    build: ./backend
+    container_name: blog-backend
+    depends_on:
+      - postgres-db
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/blog01
+      SPRING_DATASOURCE_USERNAME: aelidris
+      SPRING_DATASOURCE_PASSWORD: 01blog_pass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+  frontend-ui:
+    build: ./frontend
+    container_name: blog-frontend
+    depends_on:
+      - backend-api
+    ports:
+      - "4200:80"
+
+volumes:
+  pgdata:
