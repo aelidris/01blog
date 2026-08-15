@@ -23,6 +23,8 @@ services:
       SPRING_DATASOURCE_USERNAME: aelidris
       SPRING_DATASOURCE_PASSWORD: 01blog_pass
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    volumes:
+      - ./uploads:/app/uploads
 
   frontend-ui:
     build: ./frontend
