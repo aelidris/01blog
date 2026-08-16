@@ -115,10 +115,23 @@ export class PostDetailComponent implements OnInit {
   }
 
   addComment() {
-    if (!this.post || this.commentForm.invalid) return;
-    this.postService.addComment(this.post.id, this.commentForm.value.content).subscribe(comment => {
-      this.post!.comments.push(comment);
-      this.commentForm.reset();
+    if (this.commentForm.invalid || !this.post) return;
+
+    const content = this.commentForm.value.content;
+
+    this.postService.addComment(this.post.id, content).subscribe({
+      next: (newComment) => {
+        this.post?.comments?.push(newComment);
+        this.commentForm.reset();
+      },
+      error: (err) => {
+        // Check if status is 404 OR if the error body is the string 'Post not found'
+        if (err.status == 404 || err.error === 'Post not found' || (err.error && err.error.error === 'Post not found')) {
+          this.router.navigate(['/feed']); 
+        } else {
+          console.error('Failed to add comment', err);
+        }
+      }
     });
   }
 
