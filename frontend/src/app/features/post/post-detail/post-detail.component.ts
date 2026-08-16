@@ -13,6 +13,7 @@ import { PostService } from '../../../core/services/post.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Post } from '../../../core/models/post.model';
 import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-post-detail',
@@ -71,7 +72,7 @@ export class PostDetailComponent implements OnInit {
   commentForm: FormGroup;
 
   constructor(
-    private route: ActivatedRoute, private postService: PostService,
+    private route: ActivatedRoute, private postService: PostService, private router: Router,
     public auth: AuthService, fb: FormBuilder
   ) {
     this.commentForm = fb.group({ content: ['', [Validators.required, Validators.maxLength(1000)]] });
@@ -84,7 +85,20 @@ export class PostDetailComponent implements OnInit {
 
   toggleLike() {
     if (!this.post) return;
-    this.postService.toggleLike(this.post.id).subscribe(updated => this.post = updated);
+    
+    this.postService.toggleLike(this.post.id).subscribe({
+      next: (updated) => {
+        this.post = updated;
+      },
+      error: (err) => {
+        if (err.status == 404 || (err.error && err.error.error === 'Post not found')) {
+          // If the post was deleted while viewing its detail page, redirect to feed
+          this.router.navigate(['/feed']);
+        } else {
+          console.error('Failed to toggle like', err);
+        }
+      }
+    });
   }
 
   addComment() {

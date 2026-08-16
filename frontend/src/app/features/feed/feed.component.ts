@@ -10,6 +10,7 @@ import { PostCardComponent } from '../post/post-card/post-card.component';
 import { ReportModalComponent } from '../../shared/components/report-modal/report-modal.component';
 import { PostService } from '../../core/services/post.service';
 import { Post } from '../../core/models/post.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-feed',
@@ -60,7 +61,7 @@ export class FeedComponent implements OnInit {
   page = 0;
   lastPage = false;
 
-  constructor(private postService: PostService, private dialog: MatDialog, private snack: MatSnackBar) {}
+  constructor(private postService: PostService, private dialog: MatDialog, private snack: MatSnackBar, private router: Router) {}
 
   ngOnInit() { this.loadPosts(); }
 
@@ -75,8 +76,19 @@ export class FeedComponent implements OnInit {
   loadMore() { this.page++; this.loadPosts(); }
 
   toggleLike(postId: number) {
-    this.postService.toggleLike(postId).subscribe(updated => {
+    this.postService.toggleLike(postId).subscribe({
+      next: (updated) => {
       this.posts = this.posts.map(p => p.id === postId ? updated : p);
+      },
+      error: (err) => {
+        if (err.status === 404) {
+          // If the post was deleted, remove it from the list locally and redirect to feed
+          this.posts = this.posts.filter(p => p.id !== postId);
+          this.router.navigate(['/feed']);
+        } else {
+          console.error('Failed to toggle like', err);
+        }
+      }
     });
   }
 

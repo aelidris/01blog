@@ -15,6 +15,7 @@ import { PostCardComponent } from '../../post/post-card/post-card.component';
 import { ReportModalComponent } from '../../../shared/components/report-modal/report-modal.component';
 import { User } from '../../../core/models/user.model';
 import { Post } from '../../../core/models/post.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-block',
@@ -86,7 +87,7 @@ export class BlockComponent implements OnInit {
   constructor(
     private route: ActivatedRoute, private userService: UserService,
     private postService: PostService, public auth: AuthService,
-    private dialog: MatDialog, private snack: MatSnackBar
+    private dialog: MatDialog, private snack: MatSnackBar, private router: Router
   ) {}
 
   ngOnInit() {
@@ -118,8 +119,18 @@ export class BlockComponent implements OnInit {
   }
 
   toggleLike(postId: number) {
-    this.postService.toggleLike(postId).subscribe(updated => {
-      this.posts = this.posts.map(p => p.id === postId ? updated : p);
+    this.postService.toggleLike(postId).subscribe({
+      next: (updated) => {
+        this.posts = this.posts.map(p => p.id === postId ? updated : p);
+      },
+      error: (err) => {
+        if (err.status == 404 || (err.error && err.error.error === 'Post not found')) {
+          // Remove the deleted post from the local list instantly, staying on the same page
+          this.posts = this.posts.filter(p => p.id !== postId);
+        } else {
+          console.error('Failed to toggle like', err);
+        }
+      }
     });
   }
 
