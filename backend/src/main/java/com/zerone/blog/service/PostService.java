@@ -84,6 +84,9 @@ public class PostService {
             !currentUser.getRole().name().equals("ADMIN")) {
             throw new UnauthorizedException("Not allowed");
         }
+        post.getLikes().clear();
+        notificationRepository.deleteByPostId(postId);
+        postRepository.saveAndFlush(post);
         if (post.getMediaUrl() != null) fileStorageService.deleteFile(post.getMediaUrl());
         postRepository.delete(post);
     }
