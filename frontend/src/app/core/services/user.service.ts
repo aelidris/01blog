@@ -28,4 +28,5 @@ export class UserService {
   getNotifications()          { return this.http.get<Notification[]>(`${this.base}/users/me/notifications`); }
   getUnreadCount()            { return this.http.get<{count: number}>(`${this.base}/users/me/notifications/unread-count`); }
   markAllRead()               { return this.http.post<void>(`${this.base}/users/me/notifications/read`, {}); }
+  updateNotificationReadStatus(id: number, read: boolean) { return this.http.patch<void>(`${this.base}/users/me/notifications/${id}`, { read }); }
 }

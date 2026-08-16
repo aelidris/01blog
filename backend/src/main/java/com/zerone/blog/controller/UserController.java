@@ -99,4 +99,15 @@ public class UserController {
         userService.markNotificationsRead(user);
         return ResponseEntity.ok().build();
     }
+
+    @PatchMapping("/me/notifications/{id}")
+    public ResponseEntity<Void> updateNotificationReadStatus(
+            @AuthenticationPrincipal User user, 
+            @PathVariable Long id, 
+            @RequestBody Map<String, Boolean> payload) {
+            
+        boolean read = payload.getOrDefault("read", true);
+        userService.updateNotificationReadStatus(user, id, read);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -34,8 +34,17 @@ import { Notification } from '../../core/models/notification.model';
               [style.background]="n.read ? '' : '#e8eaf6'"
               style="height:auto;padding:12px 0">
               <mat-icon matListItemIcon [color]="n.read ? '' : 'primary'">notifications</mat-icon>
-              <div matListItemTitle>{{ n.message }}</div>
+              
+              <div matListItemTitle style="display:flex;align-items:center;justify-content:space-between;width:100%">
+                <span>{{ n.message }}</span>
+                <!-- Individual toggle read/unread button -->
+                <button mat-stroked-button color="primary" style="font-size:0.75rem;padding:0 8px;min-height:28px" (click)="toggleRead(n)">
+                  {{ n.read ? 'Mark Unread' : 'Mark Read' }}
+                </button>
+              </div>
+
               <div matListItemLine style="color:#888;font-size:0.8em">{{ n.createdAt | date:'medium' }}</div>
+              
               <a *ngIf="n.postId" [routerLink]="['/posts', n.postId]" mat-button matListItemMeta>View</a>
               <mat-divider></mat-divider>
             </mat-list-item>
@@ -61,6 +70,17 @@ export class NotificationsComponent implements OnInit {
   markAllRead() {
     this.userService.markAllRead().subscribe(() => {
       this.notifications = this.notifications.map(n => ({ ...n, read: true }));
+    });
+  }
+
+  toggleRead(n: Notification) {
+    const newReadState = !n.read;
+    // Call your service method to update the single notification state on backend
+    this.userService.updateNotificationReadStatus(n.id, newReadState).subscribe({
+      next: () => {
+        n.read = newReadState;
+      },
+      error: (err) => console.error('Failed to update notification status', err)
     });
   }
 }

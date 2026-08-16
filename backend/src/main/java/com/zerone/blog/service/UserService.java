@@ -113,6 +113,19 @@ public class UserService {
         notificationRepository.saveAll(notifications);
     }
 
+    public void updateNotificationReadStatus(User user, Long notificationId, boolean read) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
+        
+        // Security check: ensure the notification belongs to the current user
+        if (!notification.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+    
+        notification.setRead(read);
+        notificationRepository.save(notification);
+    }
+
     private User findWithCollections(Long id) {
         return userRepository.findWithCollectionsById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
