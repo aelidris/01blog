@@ -79,8 +79,21 @@ export class PostDetailComponent implements OnInit {
   }
 
   ngOnInit() {
-    const id = +this.route.snapshot.paramMap.get('id')!;
-    this.postService.getPost(id).subscribe({ next: p => { this.post = p; this.loading = false; } });
+    const postId = Number(this.route.snapshot.paramMap.get('id'));
+    
+    this.postService.getPost(postId).subscribe({
+      next: (data) => {
+        this.post = data;
+      },
+      error: (err) => {
+        // If the post was deleted or doesn't exist, redirect back to feed immediately
+        if (err.status == 404 || (err.error && err.error.error === 'Post not found')) {
+          this.router.navigate(['/feed']);
+        } else {
+          console.error('Failed to load post', err);
+        }
+      }
+    });
   }
 
   toggleLike() {
