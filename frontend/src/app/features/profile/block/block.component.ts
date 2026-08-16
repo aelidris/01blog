@@ -24,9 +24,19 @@ import { Post } from '../../../core/models/post.model';
     <div class="page-container" *ngIf="user">
       <mat-card style="margin-bottom:24px">
         <mat-card-content style="display:flex;align-items:center;gap:24px;padding:24px">
-          <div style="width:80px;height:80px;border-radius:50%;background:#3f51b5;display:flex;align-items:center;justify-content:center;color:white;font-size:2rem;font-weight:bold;flex-shrink:0">
-            {{ user.username[0].toUpperCase() }}
+          <div style="width:80px;height:80px;border-radius:50%;background:#3f51b5;display:flex;align-items:center;justify-content:center;color:white;font-size:2rem;font-weight:bold;flex-shrink:0;overflow:hidden">
+            <!-- Show image if user avatarUrl exists -->
+            <img *ngIf="user.avatarUrl" 
+                 [src]="'http://localhost:8080' + user.avatarUrl" 
+                 alt="{{ user.username }}"
+                 style="width:100%;height:100%;object-fit:cover">
+
+            <!-- Fallback to first letter if no avatarUrl -->
+            <span *ngIf="!user.avatarUrl">
+              {{ user.username[0].toUpperCase() }}
+            </span>
           </div>
+
           <div style="flex:1">
             <h2 style="margin:0">{{ user.username }}</h2>
             <p style="color:#888;margin:4px 0">{{ user.bio || 'No bio yet' }}</p>

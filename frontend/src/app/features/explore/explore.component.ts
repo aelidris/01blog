@@ -57,9 +57,21 @@ import { User } from '../../core/models/user.model';
             <div style="display:flex;align-items:center;gap:14px">
               <!-- Avatar -->
               <a [routerLink]="['/block', user.username]"
-                 style="flex-shrink:0;width:52px;height:52px;border-radius:50%;background:#3f51b5;display:flex;align-items:center;justify-content:center;color:white;font-size:1.4rem;font-weight:bold;text-decoration:none">
-                {{ user.username[0].toUpperCase() }}
+                 style="flex-shrink:0;width:52px;height:52px;border-radius:50%;background:#3f51b5;display:flex;align-items:center;justify-content:center;color:white;font-size:1.4rem;font-weight:bold;text-decoration:none;overflow:hidden">
+
+                <!-- Show image if avatarUrl exists -->
+                <img *ngIf="user.avatarUrl" 
+                     [src]="'http://localhost:8080' + user.avatarUrl" 
+                     alt="{{ user.username }}"
+                     style="width:100%;height:100%;object-fit:cover">
+
+                <!-- Fallback to first letter if avatarUrl is missing -->
+                <span *ngIf="!user.avatarUrl">
+                  {{ user.username[0].toUpperCase() }}
+                </span>
               </a>
+
+              
               <div style="flex:1;min-width:0">
                 <a [routerLink]="['/block', user.username]"
                    style="font-weight:600;font-size:1rem;color:#3f51b5;text-decoration:none;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">

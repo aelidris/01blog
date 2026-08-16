@@ -16,9 +16,19 @@ import { AuthService } from '../../../core/services/auth.service';
   template: `
     <mat-card>
       <mat-card-header>
-        <div mat-card-avatar style="background:#3f51b5;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold">
-          {{ post.author.username[0].toUpperCase() }}
+        <div mat-card-avatar style="background:#3f51b5;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;overflow:hidden">
+          <!-- Show image if author avatarUrl exists -->
+          <img *ngIf="post.author?.avatarUrl" 
+               [src]="'http://localhost:8080' + post.author.avatarUrl" 
+               alt="{{ post.author.username }}"
+               style="width:100%;height:100%;object-fit:cover">
+
+          <!-- Fallback to first letter if no avatarUrl -->
+          <span *ngIf="!post.author?.avatarUrl">
+            {{ post.author?.username?.[0]?.toUpperCase() }}
+          </span>
         </div>
+
         <mat-card-title>
           <a [routerLink]="['/block', post.author.username]">{{ post.author.username }}</a>
         </mat-card-title>

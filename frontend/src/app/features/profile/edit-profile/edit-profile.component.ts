@@ -51,6 +51,7 @@ export class EditProfileComponent implements OnInit {
   form: FormGroup;
   loading = false;
   uploading = false;
+  currentUser: any = null;
   avatarFile: File | null = null;
 
   constructor(
@@ -83,8 +84,9 @@ export class EditProfileComponent implements OnInit {
     const fd = new FormData();
     fd.append('file', this.avatarFile);
     this.userService.updateAvatar(fd).subscribe({
-      next: (u) => { this.auth.refreshCurrentUser(u); this.snack.open('Avatar updated', 'Close', { duration: 2000 }); this.uploading = false; this.avatarFile = null; },
-      error: () => { this.snack.open('Upload failed', 'Close', { duration: 2000 }); this.uploading = false; }
+      
+      next: (u) => { this.currentUser = u; this.auth.refreshCurrentUser(u); this.snack.open('Avatar updated', 'Close', { duration: 2000 }); this.uploading = false; this.avatarFile = null; },
+      error: (err) => { console.error('Upload failed error:', err); this.snack.open('Upload failed', 'Close', { duration: 2000 }); this.uploading = false; }
     });
   }
 }

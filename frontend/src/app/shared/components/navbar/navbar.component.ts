@@ -48,8 +48,19 @@ import { UserService } from '../../../core/services/user.service';
         </a>
 
         <button mat-button [matMenuTriggerFor]="userMenu" style="margin-left:4px">
-          <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.25);display:inline-flex;align-items:center;justify-content:center;font-weight:bold;margin-right:6px">
-            {{ auth.currentUser()?.username?.[0]?.toUpperCase() }}
+          <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.25);display:inline-flex;align-items:center;justify-content:center;font-weight:bold;margin-right:6px;overflow:hidden">
+            
+            <!-- Show image if avatarUrl exists -->
+            <img *ngIf="auth.currentUser()?.avatarUrl" 
+                 [src]="'http://localhost:8080' + auth.currentUser()?.avatarUrl" 
+                 alt="Avatar"
+                 style="width:100%;height:100%;object-fit:cover">
+          
+            <!-- Fallback to first letter -->
+            <span *ngIf="!auth.currentUser()?.avatarUrl">
+              {{ auth.currentUser()?.username?.[0]?.toUpperCase() }}
+            </span>
+          
           </div>
           <span class="nav-label">{{ auth.currentUser()?.username }}</span>
         </button>
