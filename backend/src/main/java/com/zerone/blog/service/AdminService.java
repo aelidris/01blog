@@ -19,6 +19,8 @@ public class AdminService {
 
     private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
+    private final ReportRepository reportRepository;
     private final MapperService mapperService;
     private final FileStorageService fileStorageService;
 
@@ -42,6 +44,18 @@ public class AdminService {
 
     public void deleteUser(Long userId) {
         User user = findUser(userId);
+        if (user.getSubscriptions() != null) user.getSubscriptions().clear();
+        if (user.getSubscribers() != null) user.getSubscribers().clear();
+        commentRepository.deleteByAuthor(user);
+        reportRepository.deleteByReporter(user);
+        reportRepository.deleteByReportedUser(user);
+        List<Post> allPosts = postRepository.findAll();
+        for (Post post : allPosts) {
+            if (post.getLikes() != null && post.getLikes().remove(user)) {
+                postRepository.save(post);
+            }
+        }
+        userRepository.save(user);
         userRepository.delete(user);
     }
 

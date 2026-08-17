@@ -14,7 +14,6 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   }
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Check if the error is explicitly a banned user response from our filter
       const errorMessage = typeof error.error === 'string' ? error.error : error.error?.error;
       if (error.status === 403 && errorMessage === 'Your account has been banned.') {
         localStorage.removeItem('token');
