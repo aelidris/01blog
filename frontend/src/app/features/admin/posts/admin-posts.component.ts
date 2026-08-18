@@ -79,12 +79,17 @@ export class AdminPostsComponent implements OnInit {
     this.adminService.getPosts().subscribe({ next: p => { this.posts = p.content; this.loading = false; } });
   }
 
-  toggleHide(post: Post) {
-    const action = (post as any).hidden ? this.adminService.unhidePost(post.id) : this.adminService.hidePost(post.id);
-    action.subscribe({
-      next: (p) => { this.posts = this.posts.map(x => x.id === p.id ? p : x); this.snack.open('Updated', 'Close', { duration: 2000 }); }
-    });
-  }
+  toggleHide(post: any) {
+  const action$ = post.hidden 
+    ? this.adminService.unhidePost(post.id) 
+    : this.adminService.hidePost(post.id);
+
+  action$.subscribe({
+    next: () => {
+      post.hidden = !post.hidden;
+    }
+  });
+}
 
   deletePost(post: Post) {
     if (!confirm('Delete this post permanently?')) return;
