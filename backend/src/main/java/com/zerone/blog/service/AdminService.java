@@ -45,7 +45,13 @@ public class AdminService {
     public void deleteUser(Long userId) {
         User user = findUser(userId);
         if (user.getSubscriptions() != null) user.getSubscriptions().clear();
-        if (user.getSubscribers() != null) user.getSubscribers().clear();
+        if (user.getSubscribers() != null) {
+            for (User subscriber : user.getSubscribers()) {
+                subscriber.getSubscriptions().remove(user);
+            }
+            user.getSubscribers().clear();
+        }
+        userRepository.save(user);
         commentRepository.deleteByAuthor(user);
         reportRepository.deleteByReporter(user);
         reportRepository.deleteByReportedUser(user);
