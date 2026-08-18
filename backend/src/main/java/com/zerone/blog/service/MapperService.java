@@ -39,6 +39,7 @@ public class MapperService {
         dto.setUpdatedAt(post.getUpdatedAt());
         dto.setAuthor(toUserDto(post.getAuthor(), currentUser));
         dto.setLikeCount(post.getLikeCount());
+        dto.setHidden(post.isHidden());
         if (currentUser != null) {
             dto.setLikedByCurrentUser(
                 post.getLikes().stream().anyMatch(u -> u.getId().equals(currentUser.getId()))

@@ -14,4 +14,5 @@ public class PostDto {
     private int likeCount;
     private boolean likedByCurrentUser;
     private List<CommentDto> comments;
+    private boolean hidden;
 }
