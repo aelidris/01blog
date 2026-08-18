@@ -49,13 +49,15 @@ import { User } from '../../../core/models/user.model';
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let u">
-              <button mat-icon-button [color]="u.banned ? 'primary' : 'warn'" (click)="toggleBan(u)"
-                [matTooltip]="u.banned ? 'Unban' : 'Ban'">
-                <mat-icon>{{ u.banned ? 'lock_open' : 'lock' }}</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="deleteUser(u)" matTooltip="Delete">
-                <mat-icon>delete</mat-icon>
-              </button>
+              <ng-container *ngIf="u.role !== 'ADMIN'">
+                <button mat-icon-button [color]="u.banned ? 'primary' : 'warn'" (click)="toggleBan(u)"
+                  [matTooltip]="u.banned ? 'Unban' : 'Ban'">
+                  <mat-icon>{{ u.banned ? 'lock_open' : 'lock' }}</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteUser(u)" matTooltip="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </ng-container>
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="cols"></tr>
