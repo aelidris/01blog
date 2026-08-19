@@ -36,8 +36,10 @@ import { Report } from '../../../core/models/report.model';
           </ng-container>
           <ng-container matColumnDef="reason">
             <th mat-header-cell *matHeaderCellDef>Reason</th>
-            <td mat-cell *matCellDef="let r" style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-              {{ r.reason }}
+            <td mat-cell *matCellDef="let r">
+              <div class="reason-cell-wrap">
+                {{ r.reason }}
+              </div>
             </td>
           </ng-container>
           <ng-container matColumnDef="date">

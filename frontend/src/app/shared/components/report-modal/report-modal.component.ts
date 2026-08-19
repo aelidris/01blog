@@ -42,7 +42,7 @@ export class ReportModalComponent {
     private reportService: ReportService,
     private snack: MatSnackBar
   ) {
-    this.form = fb.group({ reason: ['', [Validators.required, Validators.maxLength(1000)]] });
+    this.form = fb.group({ reason: ['', [Validators.required, Validators.maxLength(300)]] });
   }
 
   submit() {
