@@ -54,6 +54,10 @@ public class Post {
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Notification> notifications = new ArrayList<>();
+
     public int getLikeCount() {
         return likes.size();
     }
