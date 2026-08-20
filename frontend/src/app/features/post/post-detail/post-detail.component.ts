@@ -42,17 +42,19 @@ import { Router } from '@angular/router';
 
       <mat-card>
         <mat-card-header><mat-card-title>Comments ({{ post.comments.length }})</mat-card-title></mat-card-header>
-        <mat-card-content>
-          <div *ngFor="let c of post.comments" style="margin:12px 0">
-            <strong><a [routerLink]="['/block', c.author.username]">{{ c.author.username }}</a></strong>
-            <span style="color:#888;font-size:0.8em;margin-left:8px">{{ c.createdAt | date:'short' }}</span>
-            <p style="margin:4px 0">{{ c.content }}</p>
-            <button mat-icon-button color="warn" *ngIf="canDelete(c)" (click)="deleteComment(c.id)">
-              <mat-icon style="font-size:16px">close</mat-icon>
+        <mat-card-content style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
+          <div *ngFor="let c of post.comments" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; background: rgba(0,0,0,0.02); border-radius: 8px; border: 1px solid rgba(0,0,0,0.05);">
+            <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <strong><a [routerLink]="['/block', c.author.username]" style="font-size: 0.9rem;">{{ c.author.username }}</a></strong>
+                <span style="color: #888; font-size: 0.75rem;">{{ c.createdAt | date:'short' }}</span>
+              </div>
+              <p style="margin: 0; font-size: 0.95rem; word-break: break-all; white-space: pre-wrap; color: #333;">{{ c.content }}</p>
+            </div>
+            <button mat-icon-button color="warn" *ngIf="canDelete(c)" (click)="deleteComment(c.id)" style="transform: scale(1.1);" title="Delete comment">
+              <mat-icon style="font-size: 22px; width: 22px; height: 22px;">delete_outline</mat-icon>
             </button>
-            <mat-divider></mat-divider>
           </div>
-
           <form [formGroup]="commentForm" (ngSubmit)="addComment()" style="display:flex;gap:8px;margin-top:16px" *ngIf="auth.isLoggedIn()">
             <mat-form-field appearance="outline" style="flex:1">
               <mat-label>Add a comment...</mat-label>
