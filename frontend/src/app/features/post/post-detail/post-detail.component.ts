@@ -20,10 +20,11 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatDividerModule, MatProgressSpinnerModule],
   template: `
-    <div class="page-container" *ngIf="post">
-      <mat-card>
+    <!-- Constrained to 1200px max-width, centered with padding and gap -->
+    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px; display: flex; flex-direction: column; gap: 16px;" *ngIf="post">
+      <mat-card style="border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <mat-card-header>
-          <mat-card-title><a [routerLink]="['/block', post.author.username]">{{ post.author.username }}</a></mat-card-title>
+          <mat-card-title><a [routerLink]="['/block', post.author.username]" style="color: #3f51b5; text-decoration: none;">{{ post.author.username }}</a></mat-card-title>
           <mat-card-subtitle>{{ post.createdAt | date:'medium' }}</mat-card-subtitle>
         </mat-card-header>
         <ng-container *ngIf="post.mediaUrl">
@@ -31,7 +32,7 @@ import { Router } from '@angular/router';
           <video *ngIf="!post.mediaType?.startsWith('image/')" mat-card-image controls style="width:100%"><source [src]="mediaUrl()"></video>
         </ng-container>
         <mat-card-content>
-          <p>{{ post.description }}</p>
+          <p style="font-size: 1rem; color: #333; line-height: 1.5; margin-top: 8px;">{{ post.description }}</p>
         </mat-card-content>
         <mat-card-actions>
           <button mat-button (click)="toggleLike()" [color]="post.likedByCurrentUser ? 'primary' : ''">
@@ -40,32 +41,32 @@ import { Router } from '@angular/router';
         </mat-card-actions>
       </mat-card>
 
-      <mat-card>
-        <mat-card-header><mat-card-title>Comments ({{ post.comments.length }})</mat-card-title></mat-card-header>
+      <mat-card style="border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <mat-card-header><mat-card-title style="font-size: 1.1rem; font-weight: 600;">Comments ({{ post.comments.length }})</mat-card-title></mat-card-header>
         <mat-card-content style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
-          <div *ngFor="let c of post.comments" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; background: rgba(0,0,0,0.02); border-radius: 8px; border: 1px solid rgba(0,0,0,0.05);">
+          <div *ngFor="let c of post.comments" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; background: #fafafa; border-radius: 8px; border: 1px solid #eee;">
             <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <strong><a [routerLink]="['/block', c.author.username]" style="font-size: 0.9rem;">{{ c.author.username }}</a></strong>
+                <strong><a [routerLink]="['/block', c.author.username]" style="color: #3f51b5; text-decoration: none; font-size: 0.9rem;">{{ c.author.username }}</a></strong>
                 <span style="color: #888; font-size: 0.75rem;">{{ c.createdAt | date:'short' }}</span>
               </div>
               <p style="margin: 0; font-size: 0.95rem; word-break: break-all; white-space: pre-wrap; color: #333;">{{ c.content }}</p>
             </div>
-            <button mat-icon-button color="warn" *ngIf="canDelete(c)" (click)="deleteComment(c.id)" style="transform: scale(1.1);" title="Delete comment">
-              <mat-icon style="font-size: 22px; width: 22px; height: 22px;">delete_outline</mat-icon>
+            <button mat-icon-button color="warn" *ngIf="canDelete(c)" (click)="deleteComment(c.id)" title="Delete comment">
+              <mat-icon style="font-size: 20px; width: 20px; height: 20px;">delete_outline</mat-icon>
             </button>
           </div>
-          <form [formGroup]="commentForm" (ngSubmit)="addComment()" style="display:flex;gap:8px;margin-top:16px" *ngIf="auth.isLoggedIn()">
+          <form [formGroup]="commentForm" (ngSubmit)="addComment()" style="display:flex; gap:8px; margin-top:16px;" *ngIf="auth.isLoggedIn()">
             <mat-form-field appearance="outline" style="flex:1">
               <mat-label>Add a comment...</mat-label>
               <input matInput formControlName="content">
             </mat-form-field>
-            <button mat-raised-button color="primary" type="submit" [disabled]="commentForm.invalid">Post</button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="commentForm.invalid" style="height: 56px;">Post</button>
           </form>
         </mat-card-content>
       </mat-card>
     </div>
-    <div *ngIf="!post && loading" style="text-align:center;padding:40px"><mat-spinner [diameter]="40" style="margin:auto"></mat-spinner></div>
+    <div *ngIf="!post && loading" style="text-align:center;padding:48px"><mat-spinner [diameter]="40" style="margin:auto"></mat-spinner></div>
   `
 })
 export class PostDetailComponent implements OnInit {
