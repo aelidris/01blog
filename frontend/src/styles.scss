@@ -57,8 +57,9 @@ p {
 
 .reason-cell-wrap {
   max-width: 300px;
-  word-break: break-all;
-  white-space: normal;
-  padding: 8px 0;
-  line-height: 1.4;
+  min-width: 200px;
+  word-break: normal;       
+  overflow-wrap: break-word; 
+  padding: 12px 8px;
+  line-height: 1.5;
 }

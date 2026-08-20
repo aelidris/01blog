@@ -13,18 +13,22 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSnackBarModule],
   template: `
-    <h2 mat-dialog-title>Report User</h2>
-    <mat-dialog-content>
-      <form [formGroup]="form">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Reason</mat-label>
+    <h2 mat-dialog-title style="margin-bottom: 0; font-weight: 600;">Report User</h2>
+    <mat-dialog-content style="min-width: 400px; padding-top: 12px;">
+      <p style="color: #666; font-size: 0.9rem; margin-bottom: 16px;">
+        Please describe why you are reporting this user. This will be reviewed by site administrators.
+      </p>
+      <form [formGroup]="form" style="display: flex; flex-direction: column;">
+        <mat-form-field appearance="outline" style="width: 100%;">
+          <mat-label>Reason for report</mat-label>
           <textarea matInput formControlName="reason" rows="4" placeholder="Describe the inappropriate behavior..."></textarea>
           <mat-error *ngIf="form.get('reason')?.hasError('required')">Reason is required</mat-error>
+          <mat-error *ngIf="form.get('reason')?.hasError('maxlength')">Reason cannot exceed 300 characters</mat-error>
         </mat-form-field>
       </form>
     </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Cancel</button>
+    <mat-dialog-actions align="end" style="padding: 16px 24px; gap: 8px;">
+      <button mat-button mat-dialog-close style="color: #666;">Cancel</button>
       <button mat-raised-button color="warn" (click)="submit()" [disabled]="form.invalid || loading">
         {{ loading ? 'Submitting...' : 'Submit Report' }}
       </button>
