@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
@@ -15,69 +14,68 @@ import { Report } from '../../../core/models/report.model';
 @Component({
   selector: 'app-admin-reports',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatCardModule, MatChipsModule, MatSnackBarModule, MatProgressSpinnerModule, MatTooltipModule],
+  imports: [CommonModule, RouterLink, MatButtonModule, MatIconModule, MatCardModule, MatChipsModule, MatSnackBarModule, MatProgressSpinnerModule, MatTooltipModule],
   template: `
-    <div class="page-container">
-      <h2>User Reports</h2>
-      <mat-card *ngIf="loading" style="text-align:center;padding:32px">
+    <div class="page-container" style="max-width:900px; margin: 0 auto; padding: 24px;">
+      <h2 style="margin-bottom: 20px; font-weight: 600;">User Reports Dashboard</h2>
+
+      <!-- Loading Spinner -->
+      <div *ngIf="loading" style="text-align:center; padding:48px">
         <mat-spinner [diameter]="40" style="margin:auto"></mat-spinner>
-      </mat-card>
-      <mat-card *ngIf="!loading">
-        <table mat-table [dataSource]="reports" style="width:100%">
-          <ng-container matColumnDef="reporter">
-            <th mat-header-cell *matHeaderCellDef>Reporter</th>
-            <td mat-cell *matCellDef="let r">{{ r.reporter.username }}</td>
-          </ng-container>
-          <ng-container matColumnDef="reported">
-            <th mat-header-cell *matHeaderCellDef>Reported User</th>
-            <td mat-cell *matCellDef="let r">
-              <a [routerLink]="['/block', r.reportedUser?.username]">{{ r.reportedUser?.username }}</a>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="reason">
-            <th mat-header-cell *matHeaderCellDef>Reason</th>
-            <td mat-cell *matCellDef="let r">
-              <div class="reason-cell-wrap">
-                {{ r.reason }}
-              </div>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef>Date</th>
-            <td mat-cell *matCellDef="let r">{{ r.createdAt | date:'short' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let r">
-              <mat-chip [color]="r.status === 'PENDING' ? 'warn' : r.status === 'RESOLVED' ? 'primary' : ''" highlighted>
-                {{ r.status }}
-              </mat-chip>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let r">
-              <ng-container *ngIf="r.status === 'PENDING'">
-                <button mat-button color="primary" (click)="resolve(r, 'resolve')" matTooltip="Mark Resolved">
-                  <mat-icon>check</mat-icon> Resolve
-                </button>
-                <button mat-button color="warn" (click)="resolve(r, 'dismiss')" matTooltip="Dismiss">
-                  <mat-icon>close</mat-icon> Dismiss
-                </button>
-              </ng-container>
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="cols"></tr>
-          <tr mat-row *matRowDef="let row; columns: cols;"></tr>
-        </table>
-        <div *ngIf="reports.length === 0" style="text-align:center;padding:32px;color:#888">No reports found.</div>
-      </mat-card>
+      </div>
+
+      <!-- Reports List Container -->
+      <div *ngIf="!loading" style="display: flex; flex-direction: column; gap: 16px;">
+        
+        <div *ngFor="let r of reports" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 14px;">
+          
+          <!-- Top Row: Metadata (Reporter, Reported User, Date, Status) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 16px; font-size: 0.9rem; color: #555;">
+              <span><strong>Reporter:</strong> {{ r.reporter.username }}</span>
+              <span>•</span>
+              <span><strong>Reported User:</strong> <a [routerLink]="['/block', r.reportedUser?.username]" style="color: #3f51b5; text-decoration: none; font-weight: 500;">{{ r.reportedUser?.username }}</a></span>
+              <span>•</span>
+              <span style="color: #888;">{{ r.createdAt | date:'medium' }}</span>
+            </div>
+
+            <!-- Status Chip -->
+            <mat-chip [color]="r.status === 'PENDING' ? 'warn' : r.status === 'RESOLVED' ? 'primary' : ''" highlighted style="font-size: 0.75rem; min-height: 24px;">
+              {{ r.status }}
+            </mat-chip>
+          </div>
+
+          <!-- Middle Section: The Reason Paragraph -->
+          <div>
+            <span style="font-size: 0.85rem; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Reason:</span>
+            <p style="margin: 0; font-size: 0.95rem; color: #333; line-height: 1.5; word-break: break-word; background: #fafafa; padding: 12px; border-radius: 6px; border: 1px solid #eee;">
+              {{ r.reason }}
+            </p>
+          </div>
+
+          <!-- Bottom Row: Action Buttons -->
+          <div *ngIf="r.status === 'PENDING'" style="display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px;">
+            <button mat-stroked-button color="primary" (click)="resolve(r, 'resolve')" matTooltip="Mark Resolved" style="height: 32px; line-height: 30px;">
+              <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">check</mat-icon> Resolve
+            </button>
+            <button mat-stroked-button color="warn" (click)="resolve(r, 'dismiss')" matTooltip="Dismiss" style="height: 32px; line-height: 30px;">
+              <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">close</mat-icon> Dismiss
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="reports.length === 0" style="text-align:center; padding:48px; color:#888; background: white; border-radius: 8px; border: 1px solid #e0e0e0;">
+          No reports found.
+        </div>
+
+      </div>
     </div>
   `
 })
 export class AdminReportsComponent implements OnInit {
   reports: Report[] = [];
-  cols = ['reporter', 'reported', 'reason', 'date', 'status', 'actions'];
   loading = true;
 
   constructor(private adminService: AdminService, private snack: MatSnackBar) {}
