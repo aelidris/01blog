@@ -15,35 +15,44 @@ import { PostService } from '../../../core/services/post.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatSnackBarModule],
   template: `
-    <div class="page-container" style="max-width:600px">
-      <mat-card>
-        <mat-card-header><mat-card-title>{{ isEdit ? 'Edit Post' : 'New Post' }}</mat-card-title></mat-card-header>
+    <div class="page-container" style="max-width: 650px; margin: 0 auto; padding: 24px;">
+      <mat-card style="border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); padding: 12px;">
+        <mat-card-header style="margin-bottom: 12px;">
+          <mat-card-title style="font-weight: 600;">{{ isEdit ? 'Edit Post' : 'Create New Post' }}</mat-card-title>
+        </mat-card-header>
         <mat-card-content>
-          <form [formGroup]="form" (ngSubmit)="submit()" style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
-            <mat-form-field appearance="outline" class="full-width">
+          <form [formGroup]="form" (ngSubmit)="submit()" style="display:flex; flex-direction:column; gap:20px; margin-top:8px">
+            
+            <mat-form-field appearance="outline" style="width: 100%;">
               <mat-label>Description</mat-label>
-              <textarea matInput formControlName="description" rows="5" placeholder="Share your learning experience..."></textarea>
-              <mat-error *ngIf="form.get('description')?.hasError('required')">Required</mat-error>
+              <textarea matInput formControlName="description" rows="5" placeholder="Share your learning experience or thoughts..."></textarea>
+              <mat-error *ngIf="form.get('description')?.hasError('required')">Description is required</mat-error>
+              <mat-error *ngIf="form.get('description')?.hasError('maxlength')">Description cannot exceed 2000 characters</mat-error>
             </mat-form-field>
 
-            <div>
-              <button type="button" mat-stroked-button (click)="fileInput.click()">
-                <mat-icon>attach_file</mat-icon> {{ selectedFile ? selectedFile.name : 'Upload Image/Video' }}
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <button type="button" mat-stroked-button color="primary" (click)="fileInput.click()" style="height: 38px;">
+                <mat-icon style="margin-right: 4px;">attach_file</mat-icon> 
+                {{ selectedFile ? 'Change File' : 'Upload Image/Video' }}
               </button>
+              <span *ngIf="selectedFile" style="font-size: 0.85rem; color: #555; background: #f5f5f5; padding: 6px 12px; border-radius: 4px; border: 1px solid #ddd;">
+                {{ selectedFile.name }}
+              </span>
               <input #fileInput type="file" accept="image/*,video/*" hidden (change)="onFileSelected($event)">
             </div>
 
-            <div *ngIf="previewUrl" style="margin-top:8px">
-              <img *ngIf="isImagePreview" [src]="previewUrl" style="max-width:100%;max-height:300px;object-fit:cover;border-radius:4px">
-              <video *ngIf="!isImagePreview" [src]="previewUrl" controls style="max-width:100%;max-height:300px"></video>
+            <div *ngIf="previewUrl" style="margin-top: 4px; background: #fafafa; padding: 12px; border-radius: 6px; border: 1px solid #eee; text-align: center;">
+              <img *ngIf="isImagePreview" [src]="previewUrl" style="max-width: 100%; max-height: 300px; object-fit: cover; border-radius: 4px;">
+              <video *ngIf="!isImagePreview" [src]="previewUrl" controls style="max-width: 100%; max-height: 300px; border-radius: 4px;"></video>
             </div>
 
-            <div style="display:flex;gap:12px">
-              <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loading">
-                {{ loading ? 'Saving...' : (isEdit ? 'Update' : 'Publish') }}
+            <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f0f0f0; padding-top: 16px; margin-top: 4px;">
+              <button mat-button type="button" (click)="router.navigate(['/feed'])" style="color: #666;">Cancel</button>
+              <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loading" style="height: 36px; padding: 0 24px;">
+                {{ loading ? 'Saving...' : (isEdit ? 'Update Post' : 'Publish') }}
               </button>
-              <button mat-button type="button" (click)="router.navigate(['/feed'])">Cancel</button>
             </div>
+
           </form>
         </mat-card-content>
       </mat-card>
