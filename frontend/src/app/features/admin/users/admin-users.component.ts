@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
@@ -15,61 +14,71 @@ import { User } from '../../../core/models/user.model';
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatCardModule, MatChipsModule, MatSnackBarModule, MatProgressSpinnerModule, MatTooltipModule],
+  imports: [CommonModule, RouterLink, MatButtonModule, MatIconModule, MatCardModule, MatChipsModule, MatSnackBarModule, MatProgressSpinnerModule, MatTooltipModule],
   template: `
-    <div class="page-container">
-      <h2>Manage Users</h2>
-      <mat-card *ngIf="loading" style="text-align:center;padding:32px">
+    <!-- Constrained to 1200px max-width, centered with padding -->
+    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+      
+      <h2 style="margin-bottom: 24px; font-weight: 600;">Manage Users</h2>
+      
+      <!-- Loading Spinner -->
+      <div *ngIf="loading" style="text-align:center; padding:48px; border: 1px solid #e0e0e0; background: white; border-radius: 8px;">
         <mat-spinner [diameter]="40" style="margin:auto"></mat-spinner>
-      </mat-card>
-      <mat-card *ngIf="!loading">
-        <table mat-table [dataSource]="users" style="width:100%">
-          <ng-container matColumnDef="username">
-            <th mat-header-cell *matHeaderCellDef>Username</th>
-            <td mat-cell *matCellDef="let u">
-              <a [routerLink]="['/block', u.username]">{{ u.username }}</a>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef>Email</th>
-            <td mat-cell *matCellDef="let u">{{ u.email }}</td>
-          </ng-container>
-          <ng-container matColumnDef="role">
-            <th mat-header-cell *matHeaderCellDef>Role</th>
-            <td mat-cell *matCellDef="let u">
-              <mat-chip [color]="u.role === 'ADMIN' ? 'warn' : 'primary'" highlighted>{{ u.role }}</mat-chip>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let u">
-              <mat-chip [color]="u.banned ? 'warn' : 'primary'" highlighted>{{ u.banned ? 'BANNED' : 'ACTIVE' }}</mat-chip>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let u">
-              <ng-container *ngIf="u.role !== 'ADMIN'">
-                <button mat-icon-button [color]="u.banned ? 'primary' : 'warn'" (click)="toggleBan(u)"
-                  [matTooltip]="u.banned ? 'Unban' : 'Ban'">
-                  <mat-icon>{{ u.banned ? 'lock_open' : 'lock' }}</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" (click)="deleteUser(u)" matTooltip="Delete">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </ng-container>
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="cols"></tr>
-          <tr mat-row *matRowDef="let row; columns: cols;"></tr>
-        </table>
-      </mat-card>
+      </div>
+
+      <!-- Users List Container -->
+      <div *ngIf="!loading" style="display: flex; flex-direction: column; gap: 16px;">
+        
+        <div *ngFor="let u of users" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 14px;">
+          
+          <!-- Top Row: User Metadata & Status Chips -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 16px; font-size: 0.95rem; color: #555; flex-wrap: wrap;">
+              <span><strong>Username:</strong> <a [routerLink]="['/block', u.username]" style="color: #3f51b5; text-decoration: none; font-weight: 500;">{{ u.username }}</a></span>
+              <span>•</span>
+              <span><strong>Email:</strong> {{ u.email }}</span>
+            </div>
+
+            <!-- Chips Group (Role & Status) -->
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <mat-chip [color]="u.role === 'ADMIN' ? 'warn' : 'primary'" highlighted style="font-size: 0.75rem; min-height: 24px;">
+                {{ u.role }}
+              </mat-chip>
+              <mat-chip [color]="u.banned ? 'warn' : 'primary'" highlighted style="font-size: 0.75rem; min-height: 24px;">
+                {{ u.banned ? 'BANNED' : 'ACTIVE' }}
+              </mat-chip>
+            </div>
+          </div>
+
+          <!-- Bottom Row / Actions Area -->
+          <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding-top: 4px;">
+            <ng-container *ngIf="u.role !== 'ADMIN'">
+              <button mat-stroked-button [color]="u.banned ? 'primary' : 'warn'" (click)="toggleBan(u)"
+                [matTooltip]="u.banned ? 'Unban User' : 'Ban User'" style="height: 32px; line-height: 30px;">
+                <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">{{ u.banned ? 'lock_open' : 'lock' }}</mat-icon> 
+                {{ u.banned ? 'Unban' : 'Ban' }}
+              </button>
+              <button mat-stroked-button color="warn" (click)="deleteUser(u)" matTooltip="Delete User" style="height: 32px; line-height: 30px;">
+                <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">delete</mat-icon> Delete
+              </button>
+            </ng-container>
+            <span *ngIf="u.role === 'ADMIN'" style="font-size: 0.85rem; color: #888; font-style: italic;">Protected Admin Account</span>
+          </div>
+
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="users.length === 0" style="text-align:center; padding:48px; color:#888; background: white; border-radius: 8px; border: 1px solid #e0e0e0;">
+          No users found.
+        </div>
+
+      </div>
+
     </div>
   `
 })
 export class AdminUsersComponent implements OnInit {
   users: User[] = [];
-  cols = ['username', 'email', 'role', 'status', 'actions'];
   loading = true;
 
   constructor(private adminService: AdminService, private snack: MatSnackBar) {}

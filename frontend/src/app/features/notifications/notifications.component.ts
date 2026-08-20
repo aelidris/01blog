@@ -15,25 +15,26 @@ import { Notification } from '../../core/models/notification.model';
   standalone: true,
   imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatDividerModule, MatProgressSpinnerModule],
   template: `
-    <div class="page-container" style="max-width:650px">
-      <mat-card>
-        <mat-card-header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <mat-card-title>Notifications</mat-card-title>
+    <!-- Constrained to 750px max-width, centered with padding -->
+    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+      <mat-card style="border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border-radius: 8px;">
+        <mat-card-header style="display:flex; justify-content:space-between; align-items:center; padding: 20px 24px 12px;">
+          <mat-card-title style="font-size: 1.25rem; font-weight: 600; margin: 0;">Notifications</mat-card-title>
           <button mat-button color="primary" (click)="markAllRead()" *ngIf="notifications.length">Mark all read</button>
         </mat-card-header>
         
-        <mat-card-content>
+        <mat-card-content style="padding: 0 24px 24px;">
           <div *ngIf="loading" style="text-align:center;padding:24px">
             <mat-spinner [diameter]="32" style="margin:auto"></mat-spinner>
           </div>
-          <div *ngIf="!loading && notifications.length === 0" style="text-align:center;color:#888;padding:24px">
+          <div *ngIf="!loading && notifications.length === 0" style="text-align:center;color:#888;padding:24px; background: #fafafa; border-radius: 8px; border: 1px solid #eee;">
             No notifications yet.
           </div>
 
           <!-- Modern Flex Notification List -->
-          <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="display:flex; flex-direction:column; gap:12px; margin-top: 12px;">
             <div *ngFor="let n of notifications" 
-                 [style.background]="n.read ? '#fff' : '#e8eaf6'"
+                 [style.background]="n.read ? '#fff' : '#f0f2f5'"
                  style="display:flex; align-items:flex-start; justify-content:space-between; padding:16px; border-radius:8px; border:1px solid #e0e0e0; gap:16px; transition: background 0.2s;">
               
               <!-- Left side: Icon & Message details -->
@@ -84,7 +85,6 @@ export class NotificationsComponent implements OnInit {
 
   toggleRead(n: Notification) {
     const newReadState = !n.read;
-    // Call your service method to update the single notification state on backend
     this.userService.updateNotificationReadStatus(n.id, newReadState).subscribe({
       next: () => {
         n.read = newReadState;

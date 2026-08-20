@@ -16,18 +16,19 @@ import { Report } from '../../../core/models/report.model';
   standalone: true,
   imports: [CommonModule, RouterLink, MatButtonModule, MatIconModule, MatCardModule, MatChipsModule, MatSnackBarModule, MatProgressSpinnerModule, MatTooltipModule],
   template: `
-    <div class="page-container" style="max-width:900px; margin: 0 auto; padding: 24px;">
-      <h2 style="margin-bottom: 20px; font-weight: 600;">User Reports Dashboard</h2>
+    <!-- Updated max-width to 1200px to match all preceding admin components -->
+    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+      <h2 style="margin-bottom: 24px; font-weight: 600;">User Reports Dashboard</h2>
 
       <!-- Loading Spinner -->
-      <div *ngIf="loading" style="text-align:center; padding:48px">
+      <div *ngIf="loading" style="text-align:center; padding:48px; border: 1px solid #e0e0e0; background: white; border-radius: 8px;">
         <mat-spinner [diameter]="40" style="margin:auto"></mat-spinner>
       </div>
 
       <!-- Reports List Container -->
       <div *ngIf="!loading" style="display: flex; flex-direction: column; gap: 16px;">
         
-        <div *ngFor="let r of reports" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 14px;">
+        <div *ngFor="let r of reports" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 14px;">
           
           <!-- Top Row: Metadata (Reporter, Reported User, Date, Status) -->
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px;">

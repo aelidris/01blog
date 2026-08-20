@@ -17,57 +17,66 @@ import { UserService } from '../../../core/services/user.service';
   imports: [CommonModule, RouterLink, RouterLinkActive, MatToolbarModule, MatButtonModule,
             MatIconModule, MatBadgeModule, MatMenuModule, MatTooltipModule, MatDividerModule],
   template: `
-    <mat-toolbar color="primary">
-      <a routerLink="/feed" style="color:white;font-weight:bold;font-size:1.2rem;text-decoration:none">01Blog</a>
-      <span class="spacer"></span>
+    <mat-toolbar color="primary" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 0 24px; position: sticky; top: 0; z-index: 1000;">
+      <a routerLink="/feed" style="color:white; font-weight:700; font-size:1.25rem; text-decoration:none; display: flex; align-items: center; gap: 8px;">
+        <mat-icon style="font-size: 24px; width: 24px; height: 24px;">rss_feed</mat-icon> 01Blog
+      </a>
+      <span style="flex-grow: 1;"></span>
 
       <ng-container *ngIf="auth.isLoggedIn(); else guestNav">
 
-        <a mat-button routerLink="/feed" routerLinkActive="active-nav" matTooltip="Feed">
-          <mat-icon>home</mat-icon>
-          <span class="nav-label">Feed</span>
-        </a>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <a mat-button routerLink="/feed" routerLinkActive="active-nav" matTooltip="Feed" style="border-radius: 4px;">
+            <mat-icon>home</mat-icon>
+            <span class="nav-label">Feed</span>
+          </a>
 
-        <a mat-button routerLink="/explore" routerLinkActive="active-nav" matTooltip="Find users to follow">
-          <mat-icon>explore</mat-icon>
-          <span class="nav-label">Explore</span>
-        </a>
+          <a mat-button routerLink="/explore" routerLinkActive="active-nav" matTooltip="Find users to follow" style="border-radius: 4px;">
+            <mat-icon>explore</mat-icon>
+            <span class="nav-label">Explore</span>
+          </a>
 
-        <a mat-button routerLink="/posts/new" routerLinkActive="active-nav" matTooltip="New post">
-          <mat-icon>add_circle_outline</mat-icon>
-          <span class="nav-label">Post</span>
-        </a>
+          <a mat-button routerLink="/posts/new" routerLinkActive="active-nav" matTooltip="New post" style="border-radius: 4px;">
+            <mat-icon>add_circle_outline</mat-icon>
+            <span class="nav-label">Post</span>
+          </a>
 
-        <a mat-button routerLink="/notifications" routerLinkActive="active-nav" matTooltip="Notifications">
-          <mat-icon
-            [matBadge]="unread() > 0 ? unread() : null"
-            matBadgeColor="warn"
-            matBadgeSize="small">
-            notifications
-          </mat-icon>
-        </a>
+          <a mat-button routerLink="/notifications" routerLinkActive="active-nav" matTooltip="Notifications" style="border-radius: 4px; min-width: 40px; padding: 0 8px;">
+            <mat-icon
+              [matBadge]="unread() > 0 ? unread() : null"
+              matBadgeColor="warn"
+              matBadgeSize="small">
+              notifications
+            </mat-icon>
+          </a>
+        </div>
 
-        <button mat-button [matMenuTriggerFor]="userMenu" style="margin-left:4px">
-          <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.25);display:inline-flex;align-items:center;justify-content:center;font-weight:bold;margin-right:6px;overflow:hidden">
+        <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.2); margin: 0 12px;"></div>
+
+        <button mat-button [matMenuTriggerFor]="userMenu" style="padding: 4px 8px; border-radius: 4px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-weight:bold; overflow:hidden; border: 1px solid rgba(255,255,255,0.4);">
+              
+              <!-- Show image if avatarUrl exists -->
+              <img *ngIf="auth.currentUser()?.avatarUrl" 
+                   [src]="'http://localhost:8080' + auth.currentUser()?.avatarUrl" 
+                   alt="Avatar"
+                   style="width:100%;height:100%;object-fit:cover">
             
-            <!-- Show image if avatarUrl exists -->
-            <img *ngIf="auth.currentUser()?.avatarUrl" 
-                 [src]="'http://localhost:8080' + auth.currentUser()?.avatarUrl" 
-                 alt="Avatar"
-                 style="width:100%;height:100%;object-fit:cover">
-          
-            <!-- Fallback to first letter -->
-            <span *ngIf="!auth.currentUser()?.avatarUrl">
-              {{ auth.currentUser()?.username?.[0]?.toUpperCase() }}
-            </span>
-          
+              <!-- Fallback to first letter -->
+              <span *ngIf="!auth.currentUser()?.avatarUrl" style="font-size: 0.9rem;">
+                {{ auth.currentUser()?.username?.[0]?.toUpperCase() }}
+              </span>
+            
+            </div>
+            <span class="nav-label" style="font-weight: 500;">{{ auth.currentUser()?.username }}</span>
+            <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-left: -4px;">arrow_drop_down</mat-icon>
           </div>
-          <span class="nav-label">{{ auth.currentUser()?.username }}</span>
         </button>
 
-        <mat-menu #userMenu="matMenu">
+        <mat-menu #userMenu="matMenu" xPosition="after" style="margin-top: 8px;">
           <a mat-menu-item [routerLink]="['/block', auth.currentUser()?.username]">
-            <mat-icon>person</mat-icon> My Block
+            <mat-icon color="primary">person</mat-icon> My Profile & Block
           </a>
           <a mat-menu-item routerLink="/profile/edit">
             <mat-icon>edit</mat-icon> Edit Profile
@@ -75,28 +84,30 @@ import { UserService } from '../../../core/services/user.service';
           <a mat-menu-item routerLink="/explore">
             <mat-icon>explore</mat-icon> Explore Users
           </a>
-          <mat-divider></mat-divider>
-          <a mat-menu-item routerLink="/admin/dashboard" *ngIf="auth.isAdmin()">
-            <mat-icon>admin_panel_settings</mat-icon> Admin Panel
-          </a>
           <mat-divider *ngIf="auth.isAdmin()"></mat-divider>
+          <a mat-menu-item routerLink="/admin/dashboard" *ngIf="auth.isAdmin()">
+            <mat-icon color="warn">admin_panel_settings</mat-icon> Admin Panel
+          </a>
+          <mat-divider></mat-divider>
           <button mat-menu-item (click)="auth.logout()">
-            <mat-icon>logout</mat-icon> Logout
+            <mat-icon style="color: #d32f2f;">logout</mat-icon> Logout
           </button>
         </mat-menu>
 
       </ng-container>
 
       <ng-template #guestNav>
-        <a mat-button routerLink="/login">Login</a>
-        <a mat-raised-button routerLink="/register" style="margin-left:8px">Register</a>
+        <div style="display: flex; gap: 8px;">
+          <a mat-button routerLink="/login" style="font-weight: 500;">Login</a>
+          <a mat-raised-button color="accent" routerLink="/register" style="font-weight: 500;">Register</a>
+        </div>
       </ng-template>
     </mat-toolbar>
 
     <style>
-      .active-nav { background: rgba(255,255,255,.15) !important; border-radius: 4px; }
+      .active-nav { background: rgba(255,255,255,.18) !important; }
       .nav-label { margin-left: 4px; }
-      @media (max-width: 600px) { .nav-label { display: none; } }
+      @media (max-width: 768px) { .nav-label { display: none; } }
     </style>
   `
 })

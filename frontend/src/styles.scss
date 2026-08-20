@@ -24,7 +24,7 @@ body {
 }
 
 .page-container {
-  max-width: 900px;
+  max-width: 720px;
   margin: 24px auto;
   padding: 0 16px;
 }
@@ -62,4 +62,14 @@ p {
   overflow-wrap: break-word; 
   padding: 12px 8px;
   line-height: 1.5;
+}
+
+.feed-layout {
+  display: flex;
+  justify-content: center;
+}
+
+app-post-card img, app-post-card video {
+  max-width: 100%;
+  height: auto;
 }

@@ -17,27 +17,30 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatSnackBarModule, MatDividerModule],
   template: `
-    <div class="page-container" style="max-width:500px">
-      <mat-card>
-        <mat-card-header><mat-card-title>Edit Profile</mat-card-title></mat-card-header>
-        <mat-card-content>
-          <form [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
-            <mat-form-field appearance="outline" class="full-width">
+    <!-- Balanced max-width for forms and settings pages -->
+    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+      <mat-card style="border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border-radius: 8px;">
+        <mat-card-header style="padding: 20px 24px 0;">
+          <mat-card-title style="font-size: 1.25rem; font-weight: 600;">Edit Profile</mat-card-title>
+        </mat-card-header>
+        <mat-card-content style="padding: 24px;">
+          <form [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:16px;">
+            <mat-form-field appearance="outline" style="width: 100%;">
               <mat-label>Bio</mat-label>
               <textarea matInput formControlName="bio" rows="4" placeholder="Tell us about yourself..."></textarea>
             </mat-form-field>
             <div style="display:flex;gap:12px">
-              <button mat-raised-button color="primary" type="submit" [disabled]="loading">
-                {{ loading ? 'Saving...' : 'Save' }}
+              <button mat-raised-button color="primary" type="submit" [disabled]="loading" style="flex: 1;">
+                {{ loading ? 'Saving...' : 'Save Changes' }}
               </button>
-              <button mat-button type="button" (click)="router.navigate(['/feed'])">Cancel</button>
+              <button mat-stroked-button type="button" (click)="router.navigate(['/feed'])" style="flex: 1;">Cancel</button>
             </div>
           </form>
 
           <mat-divider style="margin:24px 0"></mat-divider>
           
-          <h3>Update Avatar</h3>
-          <div style="display:flex;align-items:center;gap:16px;margin-top:12px">
+          <h3 style="margin-top: 0; font-size: 1.1rem; color: #444;">Update Avatar</h3>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:12px; flex-wrap: wrap;">
             
             <div style="width:70px;height:70px;border-radius:50%;overflow:hidden;background:#eee;display:flex;align-items:center;justify-content:center;border:2px solid #3f51b5;flex-shrink:0;">
               <img *ngIf="avatarPreview" [src]="avatarPreview" alt="Preview" style="width:100%;height:100%;object-fit:cover">
@@ -45,7 +48,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <mat-icon *ngIf="!avatarPreview && !currentAvatarUrl" style="color:#aaa;font-size:32px;width:32px;height:32px">person</mat-icon>
             </div>
 
-            <div style="display:flex;flex-direction:column;gap:8px;flex-grow:1">
+            <div style="display:flex;flex-direction:column;gap:8px;flex-grow:1; min-width: 200px;">
               <input #fileInput type="file" accept="image/*" hidden (change)="onAvatarSelected($event)">
               <button mat-stroked-button type="button" (click)="fileInput.click()">Choose Image</button>
               <button mat-raised-button color="accent" (click)="uploadAvatar()" [disabled]="!avatarFile || uploading">

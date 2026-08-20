@@ -22,9 +22,12 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatTabsModule, MatProgressSpinnerModule, PostCardComponent],
   template: `
-    <div class="page-container" *ngIf="user">
-      <mat-card style="margin-bottom:24px">
-        <mat-card-content style="display:flex;align-items:center;gap:24px;padding:24px">
+    <!-- Consistent max-width container for profile view -->
+    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;" *ngIf="user">
+      
+      <mat-card style="margin-bottom:24px; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border-radius: 8px;">
+        <mat-card-content style="display:flex; align-items:center; gap:24px; padding:24px; flex-wrap: wrap;">
+          
           <div style="width:80px;height:80px;border-radius:50%;background:#3f51b5;display:flex;align-items:center;justify-content:center;color:white;font-size:2rem;font-weight:bold;flex-shrink:0;overflow:hidden">
             <!-- Show image if user avatarUrl exists -->
             <img *ngIf="user.avatarUrl" 
@@ -38,7 +41,7 @@ import { Router } from '@angular/router';
             </span>
           </div>
 
-          <div style="flex:1">
+          <div style="flex:1; min-width: 200px;">
             <h2 style="margin:0">{{ user.username }}</h2>
             <p style="color:#888;margin:4px 0">{{ user.bio || 'No bio yet' }}</p>
             <div style="display:flex;gap:16px;margin-top:8px">
@@ -46,34 +49,57 @@ import { Router } from '@angular/router';
               <span><strong>{{ user.subscriptionCount }}</strong> subscriptions</span>
             </div>
           </div>
-          <div *ngIf="!isOwnProfile()">
-            <button mat-raised-button [color]="user.subscribedByCurrentUser ? '' : 'primary'"
-              (click)="toggleSubscribe()">
-              {{ user.subscribedByCurrentUser ? 'Unsubscribe' : 'Subscribe' }}
-            </button>
-            <button mat-icon-button (click)="openReport()" *ngIf="auth.isLoggedIn()"><mat-icon>flag</mat-icon></button>
+
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <div *ngIf="!isOwnProfile()">
+              <button mat-raised-button [color]="user.subscribedByCurrentUser ? '' : 'primary'"
+                (click)="toggleSubscribe()">
+                <mat-icon>{{ user.subscribedByCurrentUser ? 'person_remove' : 'person_add' }}</mat-icon>
+                {{ user.subscribedByCurrentUser ? 'Unsubscribe' : 'Subscribe' }}
+              </button>
+              <button mat-icon-button (click)="openReport()" *ngIf="auth.isLoggedIn()" style="margin-left: 4px;">
+                <mat-icon>flag</mat-icon>
+              </button>
+            </div>
+            <div *ngIf="isOwnProfile()">
+              <a mat-stroked-button routerLink="/profile/edit">
+                <mat-icon>edit</mat-icon> Edit Profile
+              </a>
+            </div>
           </div>
-          <div *ngIf="isOwnProfile()">
-            <a mat-stroked-button routerLink="/profile/edit"><mat-icon>edit</mat-icon> Edit Profile</a>
-          </div>
+
         </mat-card-content>
       </mat-card>
 
-      <h3>Posts</h3>
-      <div *ngIf="loadingPosts" style="text-align:center;padding:24px"><mat-spinner [diameter]="40" style="margin:auto"></mat-spinner></div>
-      <div *ngIf="!loadingPosts && posts.length === 0" style="color:#888;text-align:center;padding:24px">No posts yet.</div>
-      <app-post-card
-        *ngFor="let post of posts"
-        [post]="post"
-        (likeToggle)="toggleLike($event)"
-        (deletePost)="deletePost($event)"
-        (reportUser)="openReport()">
-      </app-post-card>
-      <div style="text-align:center;margin:16px" *ngIf="!lastPage">
-        <button mat-stroked-button (click)="loadMorePosts()">Load More</button>
+      <h3 style="margin-bottom: 16px; color: #444;">Posts</h3>
+      
+      <div *ngIf="loadingPosts" style="text-align:center;padding:24px">
+        <mat-spinner [diameter]="40" style="margin:auto"></mat-spinner>
       </div>
+      
+      <div *ngIf="!loadingPosts && posts.length === 0" style="color:#888;text-align:center;padding:24px; background: white; border-radius: 8px; border: 1px solid #e0e0e0;">
+        No posts yet.
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <app-post-card
+          *ngFor="let post of posts"
+          [post]="post"
+          (likeToggle)="toggleLike($event)"
+          (deletePost)="deletePost($event)"
+          (reportUser)="openReport()">
+        </app-post-card>
+      </div>
+
+      <div style="text-align:center;margin:24px 0" *ngIf="!lastPage">
+        <button mat-stroked-button (click)="loadMorePosts()" style="width: 100%; background: white;">Load More</button>
+      </div>
+
     </div>
-    <div *ngIf="!user && loading" style="text-align:center;padding:40px"><mat-spinner [diameter]="40" style="margin:auto"></mat-spinner></div>
+
+    <div *ngIf="!user && loading" style="text-align:center;padding:40px">
+      <mat-spinner [diameter]="40" style="margin:auto"></mat-spinner>
+    </div>
   `
 })
 export class BlockComponent implements OnInit {

@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
@@ -15,86 +14,117 @@ import { Post } from '../../../core/models/post.model';
 @Component({
   selector: 'app-admin-posts',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatTableModule, MatButtonModule, MatIconModule, MatCardModule, MatChipsModule, MatSnackBarModule, MatProgressSpinnerModule, MatTooltipModule],
+  imports: [CommonModule, RouterLink, MatButtonModule, MatIconModule, MatCardModule, MatChipsModule, MatSnackBarModule, MatProgressSpinnerModule, MatTooltipModule],
   template: `
-    <div class="page-container">
-      <h2>Manage Posts</h2>
-      <mat-card *ngIf="loading" style="text-align:center;padding:32px">
+    <!-- Constrained to 1200px max-width, centered with padding -->
+    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+      
+      <h2 style="margin-bottom: 24px; font-weight: 600;">Manage Posts</h2>
+      
+      <!-- Loading Spinner -->
+      <div *ngIf="loading" style="text-align:center; padding:48px; border: 1px solid #e0e0e0; background: white; border-radius: 8px;">
         <mat-spinner [diameter]="40" style="margin:auto"></mat-spinner>
-      </mat-card>
-      <mat-card *ngIf="!loading">
-        <table mat-table [dataSource]="posts" style="width:100%">
-          <ng-container matColumnDef="id">
-            <th mat-header-cell *matHeaderCellDef>ID</th>
-            <td mat-cell *matCellDef="let p">{{ p.id }}</td>
-          </ng-container>
-          <ng-container matColumnDef="author">
-            <th mat-header-cell *matHeaderCellDef>Author</th>
-            <td mat-cell *matCellDef="let p">{{ p.author.username }}</td>
-          </ng-container>
-          <ng-container matColumnDef="description">
-            <th mat-header-cell *matHeaderCellDef>Description</th>
-            <td mat-cell *matCellDef="let p" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+      </div>
+
+      <!-- Posts List Container -->
+      <div *ngIf="!loading" style="display: flex; flex-direction: column; gap: 16px;">
+        
+        <div *ngFor="let p of posts" style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 14px;">
+          
+          <!-- Top Row: Metadata (ID, Author, Date, Status) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 16px; font-size: 0.9rem; color: #555; flex-wrap: wrap;">
+              <span><strong>ID:</strong> {{ p.id }}</span>
+              <span>•</span>
+              <span><strong>Author:</strong> <a [routerLink]="['/block', p.author.username]" style="color: #3f51b5; text-decoration: none; font-weight: 500;">{{ p.author.username }}</a></span>
+              <span>•</span>
+              <span style="color: #888;">{{ p.createdAt | date:'short' }}</span>
+            </div>
+
+            <!-- Status Chip -->
+            <mat-chip [color]="isPostHidden(p) ? 'warn' : 'primary'" highlighted style="font-size: 0.75rem; min-height: 24px;">
+              {{ isPostHidden(p) ? 'HIDDEN' : 'VISIBLE' }}
+            </mat-chip>
+          </div>
+
+          <!-- Middle Section: Description Paragraph -->
+          <div>
+            <span style="font-size: 0.85rem; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Description:</span>
+            <p style="margin: 0; font-size: 0.95rem; color: #333; line-height: 1.5; word-break: break-word; background: #fafafa; padding: 12px; border-radius: 6px; border: 1px solid #eee;">
               {{ p.description }}
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef>Date</th>
-            <td mat-cell *matCellDef="let p">{{ p.createdAt | date:'short' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let p">
-              <mat-chip [color]="p.hidden ? 'warn' : 'primary'" highlighted>{{ p.hidden ? 'HIDDEN' : 'VISIBLE' }}</mat-chip>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let p">
-              <a mat-icon-button [routerLink]="['/posts', p.id]" matTooltip="View"><mat-icon>visibility</mat-icon></a>
-              <button mat-icon-button (click)="toggleHide(p)" [color]="p.hidden ? 'primary' : 'warn'"
-                [matTooltip]="p.hidden ? 'Show' : 'Hide'">
-                <mat-icon>{{ p.hidden ? 'visibility' : 'visibility_off' }}</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="deletePost(p)" matTooltip="Delete">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="cols"></tr>
-          <tr mat-row *matRowDef="let row; columns: cols;"></tr>
-        </table>
-      </mat-card>
+            </p>
+          </div>
+
+          <!-- Bottom Row: Action Buttons -->
+          <div style="display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px;">
+            <a mat-stroked-button color="primary" [routerLink]="['/posts', p.id]" matTooltip="View Post" style="height: 32px; line-height: 30px;">
+              <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">visibility</mat-icon> View
+            </a>
+            <button mat-stroked-button (click)="toggleHide(p)" [color]="isPostHidden(p) ? 'primary' : 'warn'"
+              [matTooltip]="isPostHidden(p) ? 'Show Post' : 'Hide Post'" style="height: 32px; line-height: 30px;">
+              <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">{{ isPostHidden(p) ? 'visibility' : 'visibility_off' }}</mat-icon>
+              {{ isPostHidden(p) ? 'Show' : 'Hide' }}
+            </button>
+            <button mat-stroked-button color="warn" (click)="deletePost(p)" matTooltip="Delete Post" style="height: 32px; line-height: 30px;">
+              <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">delete</mat-icon> Delete
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="posts.length === 0" style="text-align:center; padding:48px; color:#888; background: white; border-radius: 8px; border: 1px solid #e0e0e0;">
+          No posts found.
+        </div>
+
+      </div>
+
     </div>
   `
 })
 export class AdminPostsComponent implements OnInit {
   posts: Post[] = [];
-  cols = ['id', 'author', 'description', 'date', 'status', 'actions'];
   loading = true;
 
   constructor(private adminService: AdminService, private snack: MatSnackBar) {}
 
   ngOnInit() {
-    this.adminService.getPosts().subscribe({ next: p => { this.posts = p.content; this.loading = false; } });
+    this.adminService.getPosts().subscribe({ 
+      next: (res: any) => { 
+        this.posts = Array.isArray(res) ? res : (res.content || []); 
+        this.loading = false; 
+      },
+      error: () => this.loading = false
+    });
+  }
+
+  isPostHidden(post: Post): boolean {
+    return !!(post as any).hidden;
   }
 
   toggleHide(post: any) {
-  const action$ = post.hidden 
-    ? this.adminService.unhidePost(post.id) 
-    : this.adminService.hidePost(post.id);
+    const hiddenState = this.isPostHidden(post);
+    const action$ = hiddenState 
+      ? this.adminService.unhidePost(post.id) 
+      : this.adminService.hidePost(post.id);
 
-  action$.subscribe({
-    next: () => {
-      post.hidden = !post.hidden;
-    }
-  });
-}
+    action$.subscribe({
+      next: () => {
+        post.hidden = !hiddenState;
+        this.snack.open('Status updated', 'Close', { duration: 2000 });
+      },
+      error: () => this.snack.open('Failed to update status', 'Close', { duration: 2000 })
+    });
+  }
 
   deletePost(post: Post) {
     if (!confirm('Delete this post permanently?')) return;
     this.adminService.deletePost(post.id).subscribe({
-      next: () => { this.posts = this.posts.filter(p => p.id !== post.id); this.snack.open('Deleted', 'Close', { duration: 2000 }); }
+      next: () => { 
+        this.posts = this.posts.filter(p => p.id !== post.id); 
+        this.snack.open('Deleted', 'Close', { duration: 2000 }); 
+      },
+      error: () => this.snack.open('Failed to delete post', 'Close', { duration: 2000 })
     });
   }
 }

@@ -15,13 +15,14 @@ import { PostService } from '../../../core/services/post.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatSnackBarModule],
   template: `
-    <div class="page-container" style="max-width: 650px; margin: 0 auto; padding: 24px;">
-      <mat-card style="border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); padding: 12px;">
-        <mat-card-header style="margin-bottom: 12px;">
-          <mat-card-title style="font-weight: 600;">{{ isEdit ? 'Edit Post' : 'Create New Post' }}</mat-card-title>
+    <!-- Balanced max-width for create/edit forms -->
+    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+      <mat-card style="border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <mat-card-header style="padding: 20px 24px 0;">
+          <mat-card-title style="font-size: 1.25rem; font-weight: 600;">{{ isEdit ? 'Edit Post' : 'Create New Post' }}</mat-card-title>
         </mat-card-header>
-        <mat-card-content>
-          <form [formGroup]="form" (ngSubmit)="submit()" style="display:flex; flex-direction:column; gap:20px; margin-top:8px">
+        <mat-card-content style="padding: 24px;">
+          <form [formGroup]="form" (ngSubmit)="submit()" style="display:flex; flex-direction:column; gap:20px;">
             
             <mat-form-field appearance="outline" style="width: 100%;">
               <mat-label>Description</mat-label>
@@ -41,7 +42,7 @@ import { PostService } from '../../../core/services/post.service';
               <input #fileInput type="file" accept="image/*,video/*" hidden (change)="onFileSelected($event)">
             </div>
 
-            <div *ngIf="previewUrl" style="margin-top: 4px; background: #fafafa; padding: 12px; border-radius: 6px; border: 1px solid #eee; text-align: center;">
+            <div *ngIf="previewUrl" style="background: #fafafa; padding: 12px; border-radius: 6px; border: 1px solid #eee; text-align: center;">
               <img *ngIf="isImagePreview" [src]="previewUrl" style="max-width: 100%; max-height: 300px; object-fit: cover; border-radius: 4px;">
               <video *ngIf="!isImagePreview" [src]="previewUrl" controls style="max-width: 100%; max-height: 300px; border-radius: 4px;"></video>
             </div>

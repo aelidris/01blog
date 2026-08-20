@@ -25,7 +25,9 @@ import { User } from '../../core/models/user.model';
     MatDividerModule, MatSnackBarModule
   ],
   template: `
-    <div class="page-container">
+    <!-- Wider centered layout container matching the application's design system -->
+    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+      
       <h2 style="margin-bottom:8px">Explore Users</h2>
       <p style="color:#888;margin-top:0;margin-bottom:24px">Find people to follow and fill your feed with their posts.</p>
 
@@ -51,8 +53,8 @@ import { User } from '../../core/models/user.model';
       </div>
 
       <!-- User cards grid -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
-        <mat-card *ngFor="let user of users" style="display:flex;flex-direction:column">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+        <mat-card *ngFor="let user of users" style="display:flex;flex-direction:column;border:1px solid #e0e0e0;box-shadow:0 1px 3px rgba(0,0,0,0.02)">
           <mat-card-content style="flex:1;padding:20px">
             <div style="display:flex;align-items:center;gap:14px">
               <!-- Avatar -->
@@ -70,7 +72,6 @@ import { User } from '../../core/models/user.model';
                   {{ user.username[0].toUpperCase() }}
                 </span>
               </a>
-
               
               <div style="flex:1;min-width:0">
                 <a [routerLink]="['/block', user.username]"
@@ -87,7 +88,7 @@ import { User } from '../../core/models/user.model';
               </div>
             </div>
           </mat-card-content>
-          <mat-card-actions style="padding:8px 16px 12px">
+          <mat-card-actions style="padding:8px 16px 16px">
             <button mat-raised-button
               [color]="user.subscribedByCurrentUser ? '' : 'primary'"
               style="width:100%"
@@ -99,6 +100,7 @@ import { User } from '../../core/models/user.model';
           </mat-card-actions>
         </mat-card>
       </div>
+
     </div>
   `
 })
