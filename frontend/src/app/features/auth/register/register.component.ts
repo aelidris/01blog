@@ -54,10 +54,10 @@ export class RegisterComponent {
 
   constructor(fb: FormBuilder, private auth: AuthService, private router: Router, private snack: MatSnackBar) {
     this.form = fb.group({
-      username: ['', [Validators.required, Validators.minLength(3)]],
+      username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(30)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      bio: ['']
+      password: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(100)]],
+      bio: ['',[Validators.maxLength(200)]]
     });
   }
 
