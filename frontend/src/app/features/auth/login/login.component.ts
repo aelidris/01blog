@@ -52,7 +52,11 @@ export class LoginComponent {
     this.loading = true;
     this.auth.login(this.form.value).subscribe({
       next: () => this.router.navigate(['/feed']),
-      error: (e) => { this.snack.open(e.error?.error || 'Login failed', 'Close', { duration: 3000 }); this.loading = false; }
+      error: (e) => {
+        const errorMessage = typeof e.error === 'string' ? e.error : (e.error?.error || 'Invalid username or password');
+        this.snack.open(errorMessage, 'Close', { duration: 4000 });
+        this.loading = false;
+      }
     });
   }
 }

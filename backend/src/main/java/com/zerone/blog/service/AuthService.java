@@ -40,11 +40,17 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new BadRequestException("User not found"));
-        String token = jwtUtil.generateToken(user);
-        return new AuthResponse(token, mapperService.toUserDto(user, user));
+    User user = userRepository.findByUsername(request.getUsername())
+            .orElseThrow(() -> new BadRequestException("Invalid username or password"));
+
+    if (user.isBanned()) {
+        throw new BadRequestException("Your account has been banned.");
     }
+
+    authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+
+    String token = jwtUtil.generateToken(user);
+    return new AuthResponse(token, mapperService.toUserDto(user, user));
+}
 }
