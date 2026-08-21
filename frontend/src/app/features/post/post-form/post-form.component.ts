@@ -34,7 +34,7 @@ import { PostService } from '../../../core/services/post.service';
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
               <button type="button" mat-stroked-button color="primary" (click)="fileInput.click()" style="height: 38px;">
                 <mat-icon style="margin-right: 4px;">attach_file</mat-icon> 
-                {{ selectedFile ? 'Change File' : 'Upload Image/Video' }}
+                {{ selectedFile || previewUrl ? 'Change File' : 'Upload Image/Video' }}
               </button>
               <span *ngIf="selectedFile" style="font-size: 0.85rem; color: #555; background: #f5f5f5; padding: 6px 12px; border-radius: 4px; border: 1px solid #ddd;">
                 {{ selectedFile.name }}
@@ -42,7 +42,7 @@ import { PostService } from '../../../core/services/post.service';
               <input #fileInput type="file" accept="image/*,video/*" hidden (change)="onFileSelected($event)">
             </div>
 
-            <div *ngIf="previewUrl" style="background: #fafafa; padding: 12px; border-radius: 6px; border: 1px solid #eee; text-align: center;">
+            <div *ngIf="previewUrl" style="background: #fafafa; padding: 12px; border-radius: 6px; border: 1px solid #eee; text-align: center; position: relative;">
               <img *ngIf="isImagePreview" [src]="previewUrl" style="max-width: 100%; max-height: 300px; object-fit: cover; border-radius: 4px;">
               <video *ngIf="!isImagePreview" [src]="previewUrl" controls style="max-width: 100%; max-height: 300px; border-radius: 4px;"></video>
             </div>
@@ -80,7 +80,17 @@ export class PostFormComponent implements OnInit {
     this.postId = this.route.snapshot.paramMap.get('id') ? +this.route.snapshot.paramMap.get('id')! : undefined;
     this.isEdit = !!this.postId;
     if (this.isEdit) {
-      this.postService.getPost(this.postId!).subscribe(p => this.form.patchValue({ description: p.description }));
+      this.postService.getPost(this.postId!).subscribe(p => {
+        this.form.patchValue({ description: p.description });
+        
+        if (p.mediaUrl) {
+          this.previewUrl = p.mediaUrl.startsWith('http') 
+            ? p.mediaUrl 
+            : `http://localhost:8080${p.mediaUrl.startsWith('/') ? '' : '/'}${p.mediaUrl}`;
+            
+          this.isImagePreview = !/\.(mp4|webm|ogg|mov)$/i.test(p.mediaUrl);
+        }
+      });
     }
   }
 
