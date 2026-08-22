@@ -50,26 +50,31 @@ A fullstack social blogging platform built with **Spring Boot** (backend) and **
 
 ## Running the Backend
 
-### 1. Create the database
+### 1. Start the Database
 
-```sql
-CREATE DATABASE blog01;
-```
+Choose **one** of the methods below depending on how you run PostgreSQL:
 
-### 2. Configure credentials
+* **Option A: Using Docker (Recommended if you don't have local root access)**
+  Run this container command. It will automatically create the `blog01` database for you:
+  ```bash
+  docker run --name local-postgres \
+    -e POSTGRES_DB=blog01 \
+    -e POSTGRES_USER=aelidris \
+    -e POSTGRES_PASSWORD=01blog_pass \
+    -p 5432:5432 \
+    -d postgres:15
 
-Edit `backend/src/main/resources/application.properties`:
-
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/blog01
-spring.datasource.username=YOUR_PG_USER
-spring.datasource.password=YOUR_PG_PASSWORD
-```
+* **Option B: Using a Native Local PostgreSQL Installation**
+  Run your local PostgreSQL service, connect to your database shell, and create the database:
+  ```sql
+  CREATE DATABASE blog01;
+  ```
 
 ### 3. Start the backend
 
 ```bash
 cd backend
+mvn wrapper:wrapper
 ./mvnw spring-boot:run
 ```
 
@@ -79,6 +84,12 @@ The API will be available at `http://localhost:8080`.
 > ```sql
 > UPDATE users SET role = 'ADMIN' WHERE username = 'your_username';
 > ```
+
+### Default Admin Account
+When the application starts for the first time, a default admin account is automatically created:
+* **Username:** `admin`
+* **Password:** `123456`
+
 
 ---
 
@@ -166,7 +177,9 @@ The app will be available at `http://localhost:4200`.
 - ✅ Responsive UI with Angular Material
 
 
-# Start with Docker
-```
+## Running with Docker
+
+If you prefer running the application using Docker, make sure you have Docker and Docker Compose installed, then run:
+
+```bash
 docker compose up --build
-```
