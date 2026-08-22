@@ -14,8 +14,9 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
   imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatSnackBarModule],
   template: `
     <h2 mat-dialog-title style="margin-bottom: 0; font-weight: 600;">Report User</h2>
-    <mat-dialog-content style="min-width: 400px; padding-top: 12px;">
-      <p style="color: #666; font-size: 0.9rem; margin-bottom: 16px;">
+    
+    <mat-dialog-content class="report-content" style="padding-top: 12px;">
+      <p style="color: #666; font-size: 0.9rem; margin-bottom: 16px; word-break: break-word;">
         Please describe why you are reporting this user. This will be reviewed by site administrators.
       </p>
       <form [formGroup]="form" style="display: flex; flex-direction: column;">
@@ -27,12 +28,34 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
         </mat-form-field>
       </form>
     </mat-dialog-content>
-    <mat-dialog-actions align="end" style="padding: 16px 24px; gap: 8px;">
+
+    <mat-dialog-actions align="end" class="report-actions" style="padding: 16px 24px; gap: 8px;">
       <button mat-button mat-dialog-close style="color: #666;">Cancel</button>
       <button mat-raised-button color="warn" (click)="submit()" [disabled]="form.invalid || loading">
         {{ loading ? 'Submitting...' : 'Submit Report' }}
       </button>
     </mat-dialog-actions>
+
+    <style>
+      .report-content {
+        width: 100%;
+        max-width: 450px;
+        box-sizing: border-box;
+      }
+
+      @media (max-width: 480px) {
+        .report-actions {
+          flex-direction: column-reverse;
+          align-items: stretch !important;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        .report-actions button {
+          width: 100%;
+          margin: 0 !important;
+        }
+      }
+    </style>
   `
 })
 export class ReportModalComponent {

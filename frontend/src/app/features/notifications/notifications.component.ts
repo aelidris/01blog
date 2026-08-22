@@ -15,7 +15,7 @@ import { Notification } from '../../core/models/notification.model';
   standalone: true,
   imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatDividerModule, MatProgressSpinnerModule],
   template: `
-    <!-- Constrained to 750px max-width, centered with padding -->
+    <!-- Constrained to 1200px max-width, centered with padding -->
     <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
       <mat-card style="border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border-radius: 8px;">
         <mat-card-header style="display:flex; justify-content:space-between; align-items:center; padding: 20px 24px 12px;">
@@ -31,23 +31,24 @@ import { Notification } from '../../core/models/notification.model';
             No notifications yet.
           </div>
 
-          <!-- Modern Flex Notification List -->
+          <!-- Modern Responsive Notification List -->
           <div style="display:flex; flex-direction:column; gap:12px; margin-top: 12px;">
             <div *ngFor="let n of notifications" 
                  [style.background]="n.read ? '#fff' : '#f0f2f5'"
+                 class="notification-item"
                  style="display:flex; align-items:flex-start; justify-content:space-between; padding:16px; border-radius:8px; border:1px solid #e0e0e0; gap:16px; transition: background 0.2s;">
               
               <!-- Left side: Icon & Message details -->
-              <div style="display:flex; align-items:flex-start; gap:12px; flex-grow:1;">
-                <mat-icon [color]="n.read ? '' : 'primary'" style="margin-top:2px;">notifications</mat-icon>
-                <div style="display:flex; flex-direction:column; gap:4px;">
-                  <span style="font-size:0.95rem; color:#333; font-weight:500;">{{ n.message }}</span>
+              <div style="display:flex; align-items:flex-start; gap:12px; flex-grow:1; min-width:0;">
+                <mat-icon [color]="n.read ? '' : 'primary'" style="margin-top:2px; flex-shrink:0;">notifications</mat-icon>
+                <div style="display:flex; flex-direction:column; gap:4px; min-width:0;">
+                  <span style="font-size:0.95rem; color:#333; font-weight:500; word-break:break-word;">{{ n.message }}</span>
                   <span style="font-size:0.75rem; color:#777;">{{ n.createdAt | date:'medium' }}</span>
                 </div>
               </div>
 
               <!-- Right side: Actions (View & Toggle Read) -->
-              <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+              <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;" class="notification-actions">
                 <a *ngIf="n.postId" [routerLink]="['/posts', n.postId]" mat-stroked-button color="primary" style="min-width:auto; padding:0 12px; height:32px; line-height:30px; font-size:0.85rem;">
                   View
                 </a>
@@ -62,6 +63,22 @@ import { Notification } from '../../core/models/notification.model';
         </mat-card-content>
       </mat-card>
     </div>
+
+    <style>
+      /* Stack actions underneath on tiny mobile viewports to prevent overflow */
+      @media (max-width: 480px) {
+        .notification-item {
+          flex-direction: column !important;
+          align-items: stretch !important;
+          gap: 12px !important;
+        }
+        .notification-actions {
+          justify-content: flex-end !important;
+          border-top: 1px solid #eee;
+          padding-top: 8px;
+        }
+      }
+    </style>
   `
 })
 export class NotificationsComponent implements OnInit {

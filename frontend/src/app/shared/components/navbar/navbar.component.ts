@@ -26,11 +26,13 @@ import { UserService } from '../../../core/services/user.service';
       <ng-container *ngIf="auth.isLoggedIn(); else guestNav">
 
         <div style="display: flex; align-items: center; gap: 4px;">
-          <a mat-button routerLink="/feed" routerLinkActive="active-nav" matTooltip="Feed" style="border-radius: 4px;">
+          <!-- Feed button that hides on mobile screens under 450px -->
+          <a mat-button routerLink="/feed" routerLinkActive="active-nav" matTooltip="Feed" style="border-radius: 4px;" class="hide-on-mobile">
             <mat-icon>home</mat-icon>
             <span class="nav-label">Feed</span>
           </a>
 
+          <!-- Explore button that stays visible on all screens -->
           <a mat-button routerLink="/explore" routerLinkActive="active-nav" matTooltip="Find users to follow" style="border-radius: 4px;">
             <mat-icon>explore</mat-icon>
             <span class="nav-label">Explore</span>
@@ -107,7 +109,28 @@ import { UserService } from '../../../core/services/user.service';
     <style>
       .active-nav { background: rgba(255,255,255,.18) !important; }
       .nav-label { margin-left: 4px; }
-      @media (max-width: 768px) { .nav-label { display: none; } }
+
+      @media (max-width: 768px) { 
+        .nav-label { display: none; } 
+      }
+
+      /* Fix for mobile screens under 450px */
+      @media (max-width: 450px) {
+        mat-toolbar {
+          padding: 0 4px !important;
+        }
+        mat-toolbar div {
+          gap: 0px !important;
+        }
+
+        .hide-on-mobile {
+          display: none !important;
+        }
+        mat-toolbar a[routerLink="/feed"] {
+          font-size: 1rem !important;
+          gap: 2px !important;
+        }
+      }
     </style>
   `
 })
