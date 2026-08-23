@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -79,7 +79,7 @@ import { Router } from '@angular/router';
     </div>
   `
 })
-export class FeedComponent implements OnInit {
+export class FeedComponent implements OnInit, OnDestroy {
   posts: Post[] = [];
   loading = false;
   page = 0;
@@ -93,7 +93,20 @@ export class FeedComponent implements OnInit {
     public auth: AuthService
   ) {}
 
-  ngOnInit() { this.loadPosts(); }
+  ngOnInit() { 
+    this.loadPosts(); 
+
+    const savedPosition = sessionStorage.getItem('feed_scroll_pos');
+    if (savedPosition) {
+      setTimeout(() => {
+        window.scrollTo(0, Number(savedPosition));
+      }, 150);
+    }
+  }
+
+  ngOnDestroy() {
+    sessionStorage.setItem('feed_scroll_pos', window.pageYOffset.toString());
+  }
 
   loadPosts() {
     this.loading = true;
