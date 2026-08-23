@@ -18,6 +18,23 @@ import { Report } from '../../../core/models/report.model';
   template: `
     <!-- Updated max-width to 1200px to match all preceding admin components -->
     <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+      
+      <!-- Quick Navigation Bar for Admin Dashboard -->
+      <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+        <a mat-stroked-button routerLink="/admin/dashboard" style="border-color: #ccc;">
+          <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">dashboard</mat-icon> Overview
+        </a>
+        <a mat-stroked-button routerLink="/admin/users" style="border-color: #ccc;">
+          <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">people</mat-icon> Users
+        </a>
+        <a mat-stroked-button routerLink="/admin/posts" style="border-color: #ccc;">
+          <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">article</mat-icon> Posts
+        </a>
+        <a mat-stroked-button color="primary" routerLink="/admin/reports" style="background-color: #3f51b5; color: white;">
+          <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 4px;">flag</mat-icon> Reports
+        </a>
+      </div>
+
       <h2 style="margin-bottom: 24px; font-weight: 600;">User Reports Dashboard</h2>
 
       <!-- Loading Spinner -->
