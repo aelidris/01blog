@@ -87,13 +87,14 @@ export class PostDetailComponent implements OnInit {
     this.postService.getPost(postId).subscribe({
       next: (data) => {
         this.post = data;
+        this.loading = false;
       },
       error: (err) => {
-        // If the post was deleted or doesn't exist, redirect back to feed immediately
-        if (err.status == 404 || (err.error && err.error.error === 'Post not found')) {
+        if (err.status == 403 || err.status == 404 || (err.error && err.error.error === 'Post not found')) {
           this.router.navigate(['/feed']);
         } else {
           console.error('Failed to load post', err);
+          this.loading = false;
         }
       }
     });
@@ -107,8 +108,7 @@ export class PostDetailComponent implements OnInit {
         this.post = updated;
       },
       error: (err) => {
-        if (err.status == 404 || (err.error && err.error.error === 'Post not found')) {
-          // If the post was deleted while viewing its detail page, redirect to feed
+        if (err.status == 403 || err.status == 404 || (err.error && err.error.error === 'Post not found')) {
           this.router.navigate(['/feed']);
         } else {
           console.error('Failed to toggle like', err);
@@ -128,8 +128,7 @@ export class PostDetailComponent implements OnInit {
         this.commentForm.reset();
       },
       error: (err) => {
-        // Check if status is 404 OR if the error body is the string 'Post not found'
-        if (err.status == 404 || err.error === 'Post not found' || (err.error && err.error.error === 'Post not found')) {
+        if (err.status == 403 || err.status == 404 || err.error === 'Post not found' || (err.error && err.error.error === 'Post not found')) {
           this.router.navigate(['/feed']); 
         } else {
           console.error('Failed to add comment', err);

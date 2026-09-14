@@ -124,9 +124,9 @@ export class FeedComponent implements OnInit, OnDestroy {
         this.posts = this.posts.map(p => p.id === postId ? updated : p);
       },
       error: (err) => {
-        if (err.status === 404) {
+        if (err.status === 403 || err.status === 404) {
           this.posts = this.posts.filter(p => p.id !== postId);
-          this.router.navigate(['/feed']);
+          this.snack.open('This post is hidden or unavailable.', 'Close', { duration: 3000 });
         } else {
           console.error('Failed to toggle like', err);
         }
@@ -137,8 +137,18 @@ export class FeedComponent implements OnInit, OnDestroy {
   deletePost(postId: number) {
     if (!confirm('Delete this post?')) return;
     this.postService.deletePost(postId).subscribe({
-      next: () => { this.posts = this.posts.filter(p => p.id !== postId); this.snack.open('Post deleted', 'Close', { duration: 2000 }); },
-      error: () => this.snack.open('Delete failed', 'Close', { duration: 2000 })
+      next: () => { 
+        this.posts = this.posts.filter(p => p.id !== postId); 
+        this.snack.open('Post deleted', 'Close', { duration: 2000 }); 
+      },
+      error: (err) => {
+        if (err.status === 403 || err.status === 404) {
+          this.posts = this.posts.filter(p => p.id !== postId);
+          this.snack.open('This post is hidden or unavailable.', 'Close', { duration: 3000 });
+        } else {
+          this.snack.open('Delete failed', 'Close', { duration: 2000 });
+        }
+      }
     });
   }
 

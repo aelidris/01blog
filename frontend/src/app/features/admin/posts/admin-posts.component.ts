@@ -126,7 +126,12 @@ export class AdminPostsComponent implements OnInit {
 
     action$.subscribe({
       next: () => {
-        post.hidden = !hiddenState;
+        this.posts = this.posts.map(p => {
+          if (p.id === post.id) {
+            return { ...p, hidden: !hiddenState };
+          }
+          return p;
+        });
         this.snack.open('Status updated', 'Close', { duration: 2000 });
       },
       error: () => this.snack.open('Failed to update status', 'Close', { duration: 2000 })

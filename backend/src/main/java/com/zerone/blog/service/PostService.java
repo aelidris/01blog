@@ -61,6 +61,7 @@ public class PostService {
 
     public PostDto updatePost(User currentUser, Long postId, CreatePostRequest request, MultipartFile media) {
         Post post = findById(postId);
+        assertPostAccessible(post, currentUser);
         assertOwner(currentUser, post);
 
         post.setDescription(request.getDescription());
@@ -80,6 +81,8 @@ public class PostService {
 
     public void deletePost(User currentUser, Long postId) {
         Post post = findById(postId);
+        assertPostAccessible(post, currentUser);
+
         if (!currentUser.getId().equals(post.getAuthor().getId()) &&
             !currentUser.getRole().name().equals("ADMIN")) {
             throw new UnauthorizedException("Not allowed");
@@ -93,6 +96,7 @@ public class PostService {
 
     public PostDto getPost(Long postId, User currentUser) {
         Post post = findById(postId);
+        assertPostAccessible(post, currentUser);
         User fullUser = currentUser != null
                 ? userRepository.findWithCollectionsById(currentUser.getId()).orElse(currentUser)
                 : null;
@@ -122,6 +126,7 @@ public class PostService {
 
     public PostDto toggleLike(User currentUser, Long postId) {
         Post post = findById(postId);
+        assertPostAccessible(post, currentUser);
         if (post.getLikes().contains(currentUser)) {
             post.getLikes().remove(currentUser);
         } else {
@@ -134,6 +139,7 @@ public class PostService {
 
     public CommentDto addComment(User currentUser, Long postId, CreateCommentRequest request) {
         Post post = findById(postId);
+        assertPostAccessible(post, currentUser);
         Comment comment = Comment.builder()
                 .content(request.getContent())
                 .author(currentUser)
@@ -162,5 +168,14 @@ public class PostService {
     private void assertOwner(User user, Post post) {
         if (!user.getId().equals(post.getAuthor().getId()))
             throw new UnauthorizedException("Not the post owner");
+    }
+
+    private void assertPostAccessible(Post post, User currentUser) {
+        if (post.isHidden()) {
+            boolean isAdmin = currentUser != null && "ADMIN".equals(currentUser.getRole().name());
+            if (!isAdmin) {
+                throw new UnauthorizedException("This post is hidden and unavailable.");
+            }
+        }
     }
 }
