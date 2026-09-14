@@ -1,11 +1,11 @@
 services:
   postgres-db:
     image: postgres:16
-    container_name: blog-db
+    container_name: blog_db
     environment:
-      POSTGRES_DB: blog01
-      POSTGRES_USER: aelidris
-      POSTGRES_PASSWORD: 01blog_pass
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -19,10 +19,12 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/blog01
-      SPRING_DATASOURCE_USERNAME: aelidris
-      SPRING_DATASOURCE_PASSWORD: 01blog_pass
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      DB_HOST: postgres-db
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
     volumes:
       - ./uploads:/app/uploads
 
