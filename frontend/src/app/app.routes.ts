@@ -4,16 +4,22 @@ import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'feed', pathMatch: 'full' },
+  
+  // Routes Public
   { path: 'login',    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent) },
   { path: 'register', loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent) },
+  
+  // Routes
   { path: 'feed',     loadComponent: () => import('./features/feed/feed.component').then(m => m.FeedComponent), canActivate: [authGuard] },
   { path: 'explore',  loadComponent: () => import('./features/explore/explore.component').then(m => m.ExploreComponent), canActivate: [authGuard] },
   { path: 'posts/new',loadComponent: () => import('./features/post/post-form/post-form.component').then(m => m.PostFormComponent), canActivate: [authGuard] },
   { path: 'posts/:id/edit', loadComponent: () => import('./features/post/post-form/post-form.component').then(m => m.PostFormComponent), canActivate: [authGuard] },
-  { path: 'posts/:id',loadComponent: () => import('./features/post/post-detail/post-detail.component').then(m => m.PostDetailComponent) },
-  { path: 'block/:username', loadComponent: () => import('./features/profile/block/block.component').then(m => m.BlockComponent) },
+  { path: 'posts/:id',loadComponent: () => import('./features/post/post-detail/post-detail.component').then(m => m.PostDetailComponent), canActivate: [authGuard] },
+  { path: 'block/:username', loadComponent: () => import('./features/profile/block/block.component').then(m => m.BlockComponent), canActivate: [authGuard] },
   { path: 'profile/edit', loadComponent: () => import('./features/profile/edit-profile/edit-profile.component').then(m => m.EditProfileComponent), canActivate: [authGuard] },
   { path: 'notifications', loadComponent: () => import('./features/notifications/notifications.component').then(m => m.NotificationsComponent), canActivate: [authGuard] },
+  
+  // Admin Routes
   {
     path: 'admin',
     canActivate: [authGuard, adminGuard],
@@ -25,5 +31,6 @@ export const routes: Routes = [
       { path: 'reports',   loadComponent: () => import('./features/admin/reports/admin-reports.component').then(m => m.AdminReportsComponent) },
     ]
   },
+  
   { path: '**', redirectTo: 'feed' }
 ];
