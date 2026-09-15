@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -60,7 +61,7 @@ import { PostService } from '../../../core/services/post.service';
     </div>
   `
 })
-export class PostFormComponent implements OnInit {
+export class PostFormComponent implements OnInit, OnDestroy {
   form: FormGroup;
   isEdit = false;
   postId?: number;
@@ -68,10 +69,12 @@ export class PostFormComponent implements OnInit {
   selectedFile: File | null = null;
   previewUrl: string | null = null;
   isImagePreview = false;
+  private objectUrlToRevoke: string | null = null;
 
   constructor(
     fb: FormBuilder, private route: ActivatedRoute,
-    public router: Router, private postService: PostService, private snack: MatSnackBar
+    public router: Router, private postService: PostService, private snack: MatSnackBar,
+    private http: HttpClient
   ) {
     this.form = fb.group({ description: ['', [Validators.required, Validators.maxLength(2000)]] });
   }
@@ -84,13 +87,31 @@ export class PostFormComponent implements OnInit {
         this.form.patchValue({ description: p.description });
         
         if (p.mediaUrl) {
-          this.previewUrl = p.mediaUrl.startsWith('http') 
-            ? p.mediaUrl 
-            : `http://localhost:8080${p.mediaUrl.startsWith('/') ? '' : '/'}${p.mediaUrl}`;
-            
           this.isImagePreview = !/\.(mp4|webm|ogg|mov)$/i.test(p.mediaUrl);
+          
+          if (p.mediaUrl.startsWith('http')) {
+            this.previewUrl = p.mediaUrl;
+          } else {
+            // Load secure media via Blob and Token
+            const filename = p.mediaUrl.replace('/uploads/', '');
+            const url = `http://localhost:8080/api/media/${filename}`;
+
+            this.http.get(url, { responseType: 'blob' }).subscribe({
+              next: (blob) => {
+                this.objectUrlToRevoke = URL.createObjectURL(blob);
+                this.previewUrl = this.objectUrlToRevoke;
+              },
+              error: (err) => console.error('Failed to load post media for editing', err)
+            });
+          }
         }
       });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.objectUrlToRevoke) {
+      URL.revokeObjectURL(this.objectUrlToRevoke);
     }
   }
 
@@ -99,6 +120,13 @@ export class PostFormComponent implements OnInit {
     if (!f) return;
     this.selectedFile = f;
     this.isImagePreview = f.type.startsWith('image/');
+    
+    // Revoke old blob url if exists before making a new local reader preview
+    if (this.objectUrlToRevoke) {
+      URL.revokeObjectURL(this.objectUrlToRevoke);
+      this.objectUrlToRevoke = null;
+    }
+
     const reader = new FileReader();
     reader.onload = e => this.previewUrl = e.target?.result as string;
     reader.readAsDataURL(f);

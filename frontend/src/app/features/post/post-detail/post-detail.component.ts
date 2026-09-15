@@ -29,7 +29,7 @@ import { HttpClient } from '@angular/common/http';
           <mat-card-subtitle>{{ post.createdAt | date:'medium' }}</mat-card-subtitle>
         </mat-card-header>
         <ng-container *ngIf="secureMediaUrl">
-          <img *ngIf="post?.mediaType?.startsWith('image/')" mat-card-image [src]="secureMediaUrl" style="max-height:500px;object-fit:cover">
+          <img *ngIf="post?.mediaType?.startsWith('image/')" mat-card-image [src]="secureMediaUrl" style="width: 100%; height: auto; max-height: 500px; object-fit: contain; border-radius: 8px; display: block;">
           <video *ngIf="!post?.mediaType?.startsWith('image/')" mat-card-image controls style="width:100%"><source [src]="secureMediaUrl"></video>
         </ng-container>
         <mat-card-content>

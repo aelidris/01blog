@@ -37,7 +37,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
       <!-- Secure Media -->
       <ng-container *ngIf="secureMediaUrl">
-        <img *ngIf="isImage()" mat-card-image [src]="secureMediaUrl" [alt]="post.description" style="max-height:400px;object-fit:cover">
+        <img *ngIf="isImage()" mat-card-image [src]="secureMediaUrl" [alt]="post.description" style="width: 100%; height: auto; max-height: 500px; object-fit: contain; border-radius: 8px; display: block;">
         <video *ngIf="!isImage()" mat-card-image controls style="width:100%;max-height:400px">
           <source [src]="secureMediaUrl">
         </video>
