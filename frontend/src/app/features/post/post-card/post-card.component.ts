@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,13 +18,12 @@ import { AuthService } from '../../../core/services/auth.service';
     <mat-card>
       <mat-card-header>
         <div mat-card-avatar style="background:#3f51b5;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;overflow:hidden">
-          <!-- Show image if author avatarUrl exists -->
-          <img *ngIf="post.author?.avatarUrl" 
-               [src]="'http://localhost:8080' + post.author.avatarUrl" 
+          <!-- Avatar secure (ila kayna) -->
+          <img *ngIf="post.author?.avatarUrl && secureAvatarUrl" 
+               [src]="secureAvatarUrl" 
                alt="{{ post.author.username }}"
                style="width:100%;height:100%;object-fit:cover">
 
-          <!-- Fallback to first letter if no avatarUrl -->
           <span *ngIf="!post.author?.avatarUrl">
             {{ post.author?.username?.[0]?.toUpperCase() }}
           </span>
@@ -35,10 +35,11 @@ import { AuthService } from '../../../core/services/auth.service';
         <mat-card-subtitle>{{ post.createdAt | date:'medium' }}</mat-card-subtitle>
       </mat-card-header>
 
-      <ng-container *ngIf="post.mediaUrl">
-        <img *ngIf="isImage()" mat-card-image [src]="mediaFullUrl()" [alt]="post.description" style="max-height:400px;object-fit:cover">
+      <!-- Secure Media -->
+      <ng-container *ngIf="secureMediaUrl">
+        <img *ngIf="isImage()" mat-card-image [src]="secureMediaUrl" [alt]="post.description" style="max-height:400px;object-fit:cover">
         <video *ngIf="!isImage()" mat-card-image controls style="width:100%;max-height:400px">
-          <source [src]="mediaFullUrl()">
+          <source [src]="secureMediaUrl">
         </video>
       </ng-container>
 
@@ -66,15 +67,48 @@ import { AuthService } from '../../../core/services/auth.service';
     </mat-card>
   `
 })
-export class PostCardComponent {
+export class PostCardComponent implements OnInit, OnDestroy {
   @Input() post!: Post;
   @Output() likeToggle = new EventEmitter<number>();
   @Output() deletePost = new EventEmitter<number>();
   @Output() reportUser = new EventEmitter<number>();
 
-  constructor(private auth: AuthService) {}
+  secureMediaUrl: string | null = null;
+  secureAvatarUrl: string | null = null;
+
+  constructor(private auth: AuthService, private http: HttpClient) {}
+
+  ngOnInit() {
+    if (this.post.mediaUrl) {
+      this.loadSecureFile(this.post.mediaUrl, 'media');
+    }
+    if (this.post.author?.avatarUrl) {
+      this.loadSecureFile(this.post.author.avatarUrl, 'avatar');
+    }
+  }
+
+  loadSecureFile(urlPath: string, type: 'media' | 'avatar') {
+    const filename = urlPath.replace('/uploads/', '');
+    const url = `http://localhost:8080/api/media/${filename}`;
+
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const objectUrl = URL.createObjectURL(blob);
+        if (type === 'media') {
+          this.secureMediaUrl = objectUrl;
+        } else {
+          this.secureAvatarUrl = objectUrl;
+        }
+      },
+      error: (err) => console.error(`Failed to load secure ${type}`, err)
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.secureMediaUrl) URL.revokeObjectURL(this.secureMediaUrl);
+    if (this.secureAvatarUrl) URL.revokeObjectURL(this.secureAvatarUrl);
+  }
 
   isOwner() { return this.auth.currentUser()?.id === this.post.author.id; }
-  isImage()  { return this.post.mediaType?.startsWith('image/'); }
-  mediaFullUrl() { return `http://localhost:8080${this.post.mediaUrl}`; }
+  isImage() { return this.post.mediaType?.startsWith('image/'); }
 }

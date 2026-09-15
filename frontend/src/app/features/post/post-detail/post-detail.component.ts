@@ -14,6 +14,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Post } from '../../../core/models/post.model';
 import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-post-detail',
@@ -27,9 +28,9 @@ import { Router } from '@angular/router';
           <mat-card-title><a [routerLink]="['/block', post.author.username]" style="color: #3f51b5; text-decoration: none;">{{ post.author.username }}</a></mat-card-title>
           <mat-card-subtitle>{{ post.createdAt | date:'medium' }}</mat-card-subtitle>
         </mat-card-header>
-        <ng-container *ngIf="post.mediaUrl">
-          <img *ngIf="post.mediaType?.startsWith('image/')" mat-card-image [src]="mediaUrl()" style="max-height:500px;object-fit:cover">
-          <video *ngIf="!post.mediaType?.startsWith('image/')" mat-card-image controls style="width:100%"><source [src]="mediaUrl()"></video>
+        <ng-container *ngIf="secureMediaUrl">
+          <img *ngIf="post?.mediaType?.startsWith('image/')" mat-card-image [src]="secureMediaUrl" style="max-height:500px;object-fit:cover">
+          <video *ngIf="!post?.mediaType?.startsWith('image/')" mat-card-image controls style="width:100%"><source [src]="secureMediaUrl"></video>
         </ng-container>
         <mat-card-content>
           <p style="font-size: 1rem; color: #333; line-height: 1.5; margin-top: 8px;">{{ post.description }}</p>
@@ -73,9 +74,10 @@ export class PostDetailComponent implements OnInit {
   post: Post | null = null;
   loading = true;
   commentForm: FormGroup;
+  secureMediaUrl: string | null = null;
 
   constructor(
-    private route: ActivatedRoute, private postService: PostService, private router: Router,
+    private route: ActivatedRoute, private postService: PostService, private router: Router, private http: HttpClient,
     public auth: AuthService, fb: FormBuilder
   ) {
     this.commentForm = fb.group({ content: ['', [Validators.required, Validators.maxLength(1000)]] });
@@ -88,16 +90,39 @@ export class PostDetailComponent implements OnInit {
       next: (data) => {
         this.post = data;
         this.loading = false;
+        
+        if (this.post.mediaUrl) {
+          this.loadSecureMedia(this.post.mediaUrl);
+        }
       },
       error: (err) => {
-        if (err.status == 403 || err.status == 404 || (err.error && err.error.error === 'Post not found')) {
+        if (err.status == 403 || err.status == 404) {
           this.router.navigate(['/feed']);
         } else {
-          console.error('Failed to load post', err);
           this.loading = false;
         }
       }
     });
+  }
+
+  loadSecureMedia(mediaUrl: string) {
+    const filename = mediaUrl.replace('/uploads/', '');
+    const url = `http://localhost:8080/api/media/${filename}`;
+
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        this.secureMediaUrl = URL.createObjectURL(blob);
+      },
+      error: (err) => {
+        console.error('Failed to load secure media', err);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.secureMediaUrl) {
+      URL.revokeObjectURL(this.secureMediaUrl);
+    }
   }
 
   toggleLike() {

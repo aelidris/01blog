@@ -1,6 +1,7 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, effect } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -26,13 +27,11 @@ import { UserService } from '../../../core/services/user.service';
       <ng-container *ngIf="auth.isLoggedIn(); else guestNav">
 
         <div style="display: flex; align-items: center; gap: 4px;">
-          <!-- Feed button that hides on mobile screens under 450px -->
           <a mat-button routerLink="/feed" routerLinkActive="active-nav" matTooltip="Feed" style="border-radius: 4px;" class="hide-on-mobile">
             <mat-icon>home</mat-icon>
             <span class="nav-label">Feed</span>
           </a>
 
-          <!-- Explore button that stays visible on all screens -->
           <a mat-button routerLink="/explore" routerLinkActive="active-nav" matTooltip="Find users to follow" style="border-radius: 4px;">
             <mat-icon>explore</mat-icon>
             <span class="nav-label">Explore</span>
@@ -59,14 +58,12 @@ import { UserService } from '../../../core/services/user.service';
           <div style="display: flex; align-items: center; gap: 8px;">
             <div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-weight:bold; overflow:hidden; border: 1px solid rgba(255,255,255,0.4);">
               
-              <!-- Show image if avatarUrl exists -->
-              <img *ngIf="auth.currentUser()?.avatarUrl" 
-                   [src]="'http://localhost:8080' + auth.currentUser()?.avatarUrl" 
+              <img *ngIf="auth.currentUser()?.avatarUrl && secureAvatarUrl" 
+                   [src]="secureAvatarUrl" 
                    alt="Avatar"
                    style="width:100%;height:100%;object-fit:cover">
             
-              <!-- Fallback to first letter -->
-              <span *ngIf="!auth.currentUser()?.avatarUrl" style="font-size: 0.9rem;">
+              <span *ngIf="!auth.currentUser()?.avatarUrl || !secureAvatarUrl" style="font-size: 0.9rem;">
                 {{ auth.currentUser()?.username?.[0]?.toUpperCase() }}
               </span>
             
@@ -114,34 +111,66 @@ import { UserService } from '../../../core/services/user.service';
         .nav-label { display: none; } 
       }
 
-      /* Fix for mobile screens under 450px */
       @media (max-width: 450px) {
-        mat-toolbar {
-          padding: 0 4px !important;
-        }
-        mat-toolbar div {
-          gap: 0px !important;
-        }
-
-        .hide-on-mobile {
-          display: none !important;
-        }
-        mat-toolbar a[routerLink="/feed"] {
-          font-size: 1rem !important;
-          gap: 2px !important;
-        }
+        mat-toolbar { padding: 0 4px !important; }
+        mat-toolbar div { gap: 0px !important; }
+        .hide-on-mobile { display: none !important; }
+        mat-toolbar a[routerLink="/feed"] { font-size: 1rem !important; gap: 2px !important; }
       }
     </style>
   `
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit, OnDestroy {
   unread = signal(0);
+  secureAvatarUrl: string | null = null;
+  private currentAvatarPath: string | null = null;
 
-  constructor(public auth: AuthService, private userService: UserService) {}
+  constructor(
+    public auth: AuthService, 
+    private userService: UserService,
+    private http: HttpClient
+  ) {
+    
+    effect(() => {
+      const user = this.auth.currentUser();
+      const newAvatarUrl = user?.avatarUrl ?? null;
+      
+      if (newAvatarUrl !== this.currentAvatarPath) {
+        this.currentAvatarPath = newAvatarUrl;
+        if (newAvatarUrl) {
+          this.loadSecureAvatar(newAvatarUrl);
+        } else {
+          if (this.secureAvatarUrl) URL.revokeObjectURL(this.secureAvatarUrl);
+          this.secureAvatarUrl = null;
+        }
+      }
+    });
+  }
 
   ngOnInit() {
     if (this.auth.isLoggedIn()) {
       this.userService.getUnreadCount().subscribe(r => this.unread.set(r.count));
+    }
+  }
+
+  loadSecureAvatar(avatarPath: string) {
+    const filename = avatarPath.replace('/uploads/', '');
+    const url = `http://localhost:8080/api/media/${filename}`;
+
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        if (this.secureAvatarUrl) {
+          URL.revokeObjectURL(this.secureAvatarUrl);
+        }
+        this.secureAvatarUrl = URL.createObjectURL(blob);
+      },
+      error: (err) => console.error('Failed to load navbar avatar', err)
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.secureAvatarUrl) {
+      URL.revokeObjectURL(this.secureAvatarUrl);
     }
   }
 }

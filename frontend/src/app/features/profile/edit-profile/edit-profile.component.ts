@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -17,7 +18,6 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatSnackBarModule, MatDividerModule],
   template: `
-    <!-- Balanced max-width for forms and settings pages -->
     <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
       <mat-card style="border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border-radius: 8px;">
         <mat-card-header style="padding: 20px 24px 0;">
@@ -44,8 +44,10 @@ import { AuthService } from '../../../core/services/auth.service';
             
             <div style="width:70px;height:70px;border-radius:50%;overflow:hidden;background:#eee;display:flex;align-items:center;justify-content:center;border:2px solid #3f51b5;flex-shrink:0;">
               <img *ngIf="avatarPreview" [src]="avatarPreview" alt="Preview" style="width:100%;height:100%;object-fit:cover">
-              <img *ngIf="!avatarPreview && currentAvatarUrl" [src]="'http://localhost:8080' + currentAvatarUrl" alt="Avatar" style="width:100%;height:100%;object-fit:cover">
-              <mat-icon *ngIf="!avatarPreview && !currentAvatarUrl" style="color:#aaa;font-size:32px;width:32px;height:32px">person</mat-icon>
+              
+              <img *ngIf="!avatarPreview && secureCurrentAvatarUrl" [src]="secureCurrentAvatarUrl" alt="Avatar" style="width:100%;height:100%;object-fit:cover">
+              
+              <mat-icon *ngIf="!avatarPreview && !secureCurrentAvatarUrl" style="color:#aaa;font-size:32px;width:32px;height:32px">person</mat-icon>
             </div>
 
             <div style="display:flex;flex-direction:column;gap:8px;flex-grow:1; min-width: 200px;">
@@ -62,7 +64,7 @@ import { AuthService } from '../../../core/services/auth.service';
     </div>
   `
 })
-export class EditProfileComponent implements OnInit {
+export class EditProfileComponent implements OnInit, OnDestroy {
   form: FormGroup;
   loading = false;
   uploading = false;
@@ -70,10 +72,12 @@ export class EditProfileComponent implements OnInit {
   avatarFile: File | null = null;
   avatarPreview: string | null = null;
   currentAvatarUrl: string | null = null;
+  secureCurrentAvatarUrl: string | null = null;
 
   constructor(
     fb: FormBuilder, private userService: UserService,
-    public router: Router, private auth: AuthService, private snack: MatSnackBar
+    public router: Router, private auth: AuthService, private snack: MatSnackBar,
+    private http: HttpClient
   ) {
     this.form = fb.group({ bio: [''] });
   }
@@ -83,6 +87,27 @@ export class EditProfileComponent implements OnInit {
     if (u) {
       this.form.patchValue({ bio: u.bio });
       this.currentAvatarUrl = u.avatarUrl ?? null;
+      if (this.currentAvatarUrl) {
+        this.loadSecureCurrentAvatar(this.currentAvatarUrl);
+      }
+    }
+  }
+
+  loadSecureCurrentAvatar(avatarPath: string) {
+    const filename = avatarPath.replace('/uploads/', '');
+    const url = `http://localhost:8080/api/media/${filename}`;
+
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        this.secureCurrentAvatarUrl = URL.createObjectURL(blob);
+      },
+      error: (err) => console.error('Failed to load edit profile avatar', err)
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.secureCurrentAvatarUrl) {
+      URL.revokeObjectURL(this.secureCurrentAvatarUrl);
     }
   }
 
@@ -113,6 +138,13 @@ export class EditProfileComponent implements OnInit {
         this.currentUser = u; 
         this.auth.refreshCurrentUser(u); 
         this.currentAvatarUrl = u.avatarUrl ?? null;
+        
+        // Load the new uploaded avatar securely via Blob
+        if (this.currentAvatarUrl) {
+          if (this.secureCurrentAvatarUrl) URL.revokeObjectURL(this.secureCurrentAvatarUrl);
+          this.loadSecureCurrentAvatar(this.currentAvatarUrl);
+        }
+
         this.avatarPreview = null;
         this.avatarFile = null;
         this.snack.open('Avatar updated', 'Close', { duration: 2000 }); 

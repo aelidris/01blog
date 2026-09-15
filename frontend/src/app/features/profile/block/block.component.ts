@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,21 +23,18 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatTabsModule, MatProgressSpinnerModule, PostCardComponent],
   template: `
-    <!-- Consistent max-width container for profile view -->
     <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;" *ngIf="user">
       
       <mat-card style="margin-bottom:24px; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border-radius: 8px;">
         <mat-card-content style="display:flex; align-items:center; gap:24px; padding:24px; flex-wrap: wrap;">
           
           <div style="width:80px;height:80px;border-radius:50%;background:#3f51b5;display:flex;align-items:center;justify-content:center;color:white;font-size:2rem;font-weight:bold;flex-shrink:0;overflow:hidden">
-            <!-- Show image if user avatarUrl exists -->
-            <img *ngIf="user.avatarUrl" 
-                 [src]="'http://localhost:8080' + user.avatarUrl" 
+            <img *ngIf="user.avatarUrl && secureAvatarUrl" 
+                 [src]="secureAvatarUrl" 
                  alt="{{ user.username }}"
                  style="width:100%;height:100%;object-fit:cover">
 
-            <!-- Fallback to first letter if no avatarUrl -->
-            <span *ngIf="!user.avatarUrl">
+            <span *ngIf="!user.avatarUrl || !secureAvatarUrl">
               {{ user.username[0].toUpperCase() }}
             </span>
           </div>
@@ -102,23 +100,53 @@ import { Router } from '@angular/router';
     </div>
   `
 })
-export class BlockComponent implements OnInit {
+export class BlockComponent implements OnInit, OnDestroy {
   user: User | null = null;
   posts: Post[] = [];
   loading = true;
   loadingPosts = false;
   page = 0;
   lastPage = false;
+  secureAvatarUrl: string | null = null;
 
   constructor(
     private route: ActivatedRoute, private userService: UserService,
     private postService: PostService, public auth: AuthService,
-    private dialog: MatDialog, private snack: MatSnackBar, private router: Router
+    private dialog: MatDialog, private snack: MatSnackBar, private router: Router,
+    private http: HttpClient // <-- Injécti HttpClient hna
   ) {}
 
   ngOnInit() {
     const username = this.route.snapshot.paramMap.get('username')!;
-    this.userService.getBlock(username).subscribe({ next: u => { this.user = u; this.loading = false; this.loadPosts(); } });
+    this.userService.getBlock(username).subscribe({ 
+      next: u => { 
+        this.user = u; 
+        this.loading = false; 
+        this.loadPosts(); 
+
+        if (this.user.avatarUrl) {
+          this.loadSecureAvatar(this.user.avatarUrl);
+        }
+      } 
+    });
+  }
+
+  loadSecureAvatar(avatarPath: string) {
+    const filename = avatarPath.replace('/uploads/', '');
+    const url = `http://localhost:8080/api/media/${filename}`;
+
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        this.secureAvatarUrl = URL.createObjectURL(blob);
+      },
+      error: (err) => console.error('Failed to load profile avatar', err)
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.secureAvatarUrl) {
+      URL.revokeObjectURL(this.secureAvatarUrl);
+    }
   }
 
   loadPosts() {
@@ -151,7 +179,6 @@ export class BlockComponent implements OnInit {
       },
       error: (err) => {
         if (err.status == 404 || (err.error && err.error.error === 'Post not found')) {
-          // Remove the deleted post from the local list instantly, staying on the same page
           this.posts = this.posts.filter(p => p.id !== postId);
         } else {
           console.error('Failed to toggle like', err);

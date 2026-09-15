@@ -4,6 +4,8 @@ import com.zerone.blog.exception.BadRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -16,6 +18,20 @@ public class FileStorageService {
     private String uploadDir;
 
     private static final long MAX_SIZE = 50 * 1024 * 1024L;
+
+    public Resource loadFileAsResource(String filename) {
+        try {
+            Path filePath = Paths.get(uploadDir).toAbsolutePath().resolve(filename).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+            if (resource.exists() && resource.isReadable()) {
+                return resource;
+            } else {
+                throw new RuntimeException("File not found or not readable: " + filename);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("File not found: " + filename, e);
+        }
+    }
 
     public String storeFile(MultipartFile file) {
         if (file.isEmpty()) throw new BadRequestException("File is empty");

@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -10,7 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { UserService } from '../../core/services/user.service';
 import { AuthService } from '../../core/services/auth.service';
 import { User } from '../../core/models/user.model';
@@ -25,13 +26,11 @@ import { User } from '../../core/models/user.model';
     MatDividerModule, MatSnackBarModule
   ],
   template: `
-    <!-- Wider centered layout container matching the application's design system -->
     <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
       
       <h2 style="margin-bottom:8px">Explore Users</h2>
       <p style="color:#888;margin-top:0;margin-bottom:24px">Find people to follow and fill your feed with their posts.</p>
 
-      <!-- Search bar -->
       <mat-form-field appearance="outline" style="width:100%;margin-bottom:24px">
         <mat-label>Search by username or bio...</mat-label>
         <mat-icon matPrefix>search</mat-icon>
@@ -41,34 +40,28 @@ import { User } from '../../core/models/user.model';
         </button>
       </mat-form-field>
 
-      <!-- Loading -->
       <div *ngIf="loading" style="text-align:center;padding:40px">
         <mat-spinner [diameter]="40" style="margin:auto"></mat-spinner>
       </div>
 
-      <!-- Empty -->
       <div *ngIf="!loading && users.length === 0" style="text-align:center;padding:40px;color:#888">
         <mat-icon style="font-size:48px;width:48px;height:48px;opacity:.4">person_search</mat-icon>
         <p>{{ searchCtrl.value ? 'No users found for "' + searchCtrl.value + '"' : 'No other users yet.' }}</p>
       </div>
 
-      <!-- User cards grid -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
         <mat-card *ngFor="let user of users" style="display:flex;flex-direction:column;border:1px solid #e0e0e0;box-shadow:0 1px 3px rgba(0,0,0,0.02)">
           <mat-card-content style="flex:1;padding:20px">
             <div style="display:flex;align-items:center;gap:14px">
-              <!-- Avatar -->
               <a [routerLink]="['/block', user.username]"
                  style="flex-shrink:0;width:52px;height:52px;border-radius:50%;background:#3f51b5;display:flex;align-items:center;justify-content:center;color:white;font-size:1.4rem;font-weight:bold;text-decoration:none;overflow:hidden">
 
-                <!-- Show image if avatarUrl exists -->
-                <img *ngIf="user.avatarUrl" 
-                     [src]="'http://localhost:8080' + user.avatarUrl" 
+                <img *ngIf="user.avatarUrl && secureAvatars[user.id]" 
+                     [src]="secureAvatars[user.id]" 
                      alt="{{ user.username }}"
                      style="width:100%;height:100%;object-fit:cover">
 
-                <!-- Fallback to first letter if avatarUrl is missing -->
-                <span *ngIf="!user.avatarUrl">
+                <span *ngIf="!user.avatarUrl || !secureAvatars[user.id]">
                   {{ user.username[0].toUpperCase() }}
                 </span>
               </a>
@@ -104,15 +97,19 @@ import { User } from '../../core/models/user.model';
     </div>
   `
 })
-export class ExploreComponent implements OnInit {
+export class ExploreComponent implements OnInit, OnDestroy {
   users: User[] = [];
   loading = true;
   searchCtrl = new FormControl('');
+  
+  
+  secureAvatars: { [key: number]: string } = {};
 
   constructor(
     private userService: UserService,
     public auth: AuthService,
-    private snack: MatSnackBar
+    private snack: MatSnackBar,
+    private http: HttpClient
   ) {}
 
   ngOnInit() {
@@ -128,7 +125,11 @@ export class ExploreComponent implements OnInit {
           : this.userService.browseUsers();
       })
     ).subscribe({
-      next: users => { this.users = users; this.loading = false; },
+      next: users => { 
+        this.users = users; 
+        this.loading = false; 
+        this.loadAvatarsForUsers(users);
+      },
       error: () => this.loading = false
     });
   }
@@ -136,9 +137,43 @@ export class ExploreComponent implements OnInit {
   loadAll() {
     this.loading = true;
     this.userService.browseUsers().subscribe({
-      next: users => { this.users = users; this.loading = false; },
+      next: users => { 
+        this.users = users; 
+        this.loading = false; 
+        this.loadAvatarsForUsers(users);
+      },
       error: () => this.loading = false
     });
+  }
+
+  loadAvatarsForUsers(users: User[]) {
+    // Revoke old object URLs to avoid memory leaks
+    this.clearAvatars();
+
+    users.forEach(user => {
+      if (user.avatarUrl) {
+        const filename = user.avatarUrl.replace('/uploads/', '');
+        const url = `http://localhost:8080/api/media/${filename}`;
+
+        this.http.get(url, { responseType: 'blob' }).subscribe({
+          next: (blob) => {
+            this.secureAvatars[user.id] = URL.createObjectURL(blob);
+          },
+          error: (err) => console.error(`Failed to load avatar for user ${user.id}`, err)
+        });
+      }
+    });
+  }
+
+  clearAvatars() {
+    Object.values(this.secureAvatars).forEach(objectUrl => {
+      URL.revokeObjectURL(objectUrl);
+    });
+    this.secureAvatars = {};
+  }
+
+  ngOnDestroy() {
+    this.clearAvatars();
   }
 
   isOwnProfile(user: User) {
