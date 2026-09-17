@@ -35,7 +35,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <mat-error *ngIf="form.get('email')?.hasError('pattern') || form.get('email')?.hasError('email')">Enter a valid email like name&#64;example.com</mat-error>
             </mat-form-field>
 
-            <mat-form-field appearance="outline" style="width: 100%;">
+            <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 12px;">
               <mat-label>Password</mat-label>
               <input matInput type="password" formControlName="password">
               <mat-error *ngIf="form.get('password')?.hasError('required')">Password is required</mat-error>
