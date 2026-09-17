@@ -40,7 +40,7 @@ import { PostService } from '../../../core/services/post.service';
               <span *ngIf="selectedFile" style="font-size: 0.85rem; color: #555; background: #f5f5f5; padding: 6px 12px; border-radius: 4px; border: 1px solid #ddd;">
                 {{ selectedFile.name }}
               </span>
-              <input #fileInput type="file" accept="image/*,video/*" hidden (change)="onFileSelected($event)">
+              <input #fileInput type="file" accept="image/jpeg,image/png,video/mp4" hidden (change)="onFileSelected($event)">
             </div>
 
             <div *ngIf="previewUrl" style="background: #fafafa; padding: 12px; border-radius: 6px; border: 1px solid #eee; text-align: center; position: relative;">
@@ -116,12 +116,24 @@ export class PostFormComponent implements OnInit, OnDestroy {
   }
 
   onFileSelected(event: Event) {
-    const f = (event.target as HTMLInputElement).files?.[0];
+    const input = event.target as HTMLInputElement;
+    const f = input.files?.[0];
     if (!f) return;
+
+    const fileName = f.name.toLowerCase();
+    const isJpgOrPng = fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png');
+    const isMp4 = fileName.endsWith('.mp4');
+
+    if (!isJpgOrPng && !isMp4) {
+      this.snack.open('Only JPEG, PNG images and MP4 videos are allowed', 'Close', { duration: 4000 });
+      input.value = '';
+      return;
+    }
+
     this.selectedFile = f;
-    this.isImagePreview = f.type.startsWith('image/');
+    this.isImagePreview = isJpgOrPng;
+
     
-    // Revoke old blob url if exists before making a new local reader preview
     if (this.objectUrlToRevoke) {
       URL.revokeObjectURL(this.objectUrlToRevoke);
       this.objectUrlToRevoke = null;

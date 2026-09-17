@@ -37,16 +37,20 @@ public class FileStorageService {
         if (file.isEmpty()) throw new BadRequestException("File is empty");
         if (file.getSize() > MAX_SIZE) throw new BadRequestException("File exceeds 50MB limit");
 
-        String contentType = file.getContentType();
-        if (contentType == null ||
-            (!contentType.startsWith("image/") && !contentType.startsWith("video/"))) {
-            throw new BadRequestException("Only image or video files are allowed");
+        String original = file.getOriginalFilename();
+        if (original == null || original.isEmpty()) {
+            throw new BadRequestException("Invalid file name");
         }
 
-        String original = file.getOriginalFilename();
-        String ext = (original != null && original.contains("."))
-                ? original.substring(original.lastIndexOf('.'))
-                : "";
+        String lower = original.toLowerCase();
+        boolean isJpgOrPng = lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png");
+        boolean isMp4 = lower.endsWith(".mp4");
+
+        if (!isJpgOrPng && !isMp4) {
+            throw new BadRequestException("Only JPEG, PNG images and MP4 videos are allowed");
+        }
+
+        String ext = lower.substring(lower.lastIndexOf('.'));
         String filename = UUID.randomUUID() + ext;
 
         try {

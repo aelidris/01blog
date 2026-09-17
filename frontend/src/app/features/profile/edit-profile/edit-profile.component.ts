@@ -51,7 +51,7 @@ import { AuthService } from '../../../core/services/auth.service';
             </div>
 
             <div style="display:flex;flex-direction:column;gap:8px;flex-grow:1; min-width: 200px;">
-              <input #fileInput type="file" accept="image/*" hidden (change)="onAvatarSelected($event)">
+              <input #fileInput type="file" accept="image/jpeg,image/png,video/mp4" hidden (change)="onFileSelected($event)">
               <button mat-stroked-button type="button" (click)="fileInput.click()">Choose Image</button>
               <button mat-raised-button color="accent" (click)="uploadAvatar()" [disabled]="!avatarFile || uploading">
                 {{ uploading ? 'Uploading...' : 'Upload Avatar' }}
@@ -119,9 +119,20 @@ export class EditProfileComponent implements OnInit, OnDestroy {
     });
   }
 
-  onAvatarSelected(event: Event) {
-    const f = (event.target as HTMLInputElement).files?.[0];
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const f = input.files?.[0];
     if (!f) return;
+
+    const fileName = f.name.toLowerCase();
+    const isJpgOrPng = fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png');
+
+    if (!isJpgOrPng) {
+      this.snack.open('Only JPEG and PNG images are allowed for avatars', 'Close', { duration: 4000 });
+      input.value = '';
+      return;
+    }
+
     this.avatarFile = f;
     const reader = new FileReader();
     reader.onload = e => this.avatarPreview = e.target?.result as string;
