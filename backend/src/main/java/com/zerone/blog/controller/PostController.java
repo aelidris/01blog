@@ -56,10 +56,12 @@ public class PostController {
             @AuthenticationPrincipal User user,
             @PathVariable Long id,
             @RequestParam("description") String description,
+            @RequestParam(value = "removeMedia", required = false, defaultValue = "false") boolean removeMedia,
             @RequestPart(value = "media", required = false) MultipartFile media) {
+        
         CreatePostRequest request = new CreatePostRequest();
         request.setDescription(description);
-        return ResponseEntity.ok(postService.updatePost(user, id, request, media));
+        return ResponseEntity.ok(postService.updatePost(user, id, request, media, removeMedia));
     }
 
     @DeleteMapping("/{id}")

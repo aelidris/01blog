@@ -16,7 +16,6 @@ import { PostService } from '../../../core/services/post.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatSnackBarModule],
   template: `
-    <!-- Balanced max-width for create/edit forms -->
     <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
       <mat-card style="border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <mat-card-header style="padding: 20px 24px 0;">
@@ -43,9 +42,13 @@ import { PostService } from '../../../core/services/post.service';
               <input #fileInput type="file" accept="image/jpeg,image/png,video/mp4" hidden (change)="onFileSelected($event)">
             </div>
 
-            <div *ngIf="previewUrl" style="background: #fafafa; padding: 12px; border-radius: 6px; border: 1px solid #eee; text-align: center; position: relative;">
-              <img *ngIf="isImagePreview" [src]="previewUrl" style="max-width: 100%; max-height: 300px; object-fit: cover; border-radius: 4px;">
-              <video *ngIf="!isImagePreview" [src]="previewUrl" controls style="max-width: 100%; max-height: 300px; border-radius: 4px;"></video>
+            <!-- Preview Container with Delete Button -->
+            <div *ngIf="previewUrl" style="background: #fafafa; padding: 12px; border-radius: 6px; border: 1px solid #eee; text-align: center; position: relative; max-width: fit-content; margin: 0 auto;">
+              <button mat-mini-fab color="warn" type="button" (click)="removeMedia()" style="position: absolute; top: 16px; right: 16px; z-index: 10;" title="Remove media">
+                <mat-icon>delete</mat-icon>
+              </button>
+              <img *ngIf="isImagePreview" [src]="previewUrl" style="max-width: 100%; max-height: 300px; object-fit: cover; border-radius: 4px; display: block;">
+              <video *ngIf="!isImagePreview" [src]="previewUrl" controls style="max-width: 100%; max-height: 300px; border-radius: 4px; display: block;"></video>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f0f0f0; padding-top: 16px; margin-top: 4px;">
@@ -69,6 +72,7 @@ export class PostFormComponent implements OnInit, OnDestroy {
   selectedFile: File | null = null;
   previewUrl: string | null = null;
   isImagePreview = false;
+  removeMediaFlag = false;
   private objectUrlToRevoke: string | null = null;
 
   constructor(
@@ -92,7 +96,6 @@ export class PostFormComponent implements OnInit, OnDestroy {
           if (p.mediaUrl.startsWith('http')) {
             this.previewUrl = p.mediaUrl;
           } else {
-            // Load secure media via Blob and Token
             const filename = p.mediaUrl.replace('/uploads/', '');
             const url = `http://localhost:8080/api/media/${filename}`;
 
@@ -132,8 +135,8 @@ export class PostFormComponent implements OnInit, OnDestroy {
 
     this.selectedFile = f;
     this.isImagePreview = isJpgOrPng;
+    this.removeMediaFlag = false;
 
-    
     if (this.objectUrlToRevoke) {
       URL.revokeObjectURL(this.objectUrlToRevoke);
       this.objectUrlToRevoke = null;
@@ -144,12 +147,26 @@ export class PostFormComponent implements OnInit, OnDestroy {
     reader.readAsDataURL(f);
   }
 
+  removeMedia() {
+    if (this.objectUrlToRevoke) {
+      URL.revokeObjectURL(this.objectUrlToRevoke);
+      this.objectUrlToRevoke = null;
+    }
+    this.previewUrl = null;
+    this.selectedFile = null;
+    this.removeMediaFlag = true;
+  }
+
   submit() {
     if (this.form.invalid) return;
     this.loading = true;
     const fd = new FormData();
     fd.append('description', this.form.value.description);
-    if (this.selectedFile) fd.append('media', this.selectedFile);
+    fd.append('removeMedia', String(this.removeMediaFlag));
+
+    if (this.selectedFile) {
+      fd.append('media', this.selectedFile);
+    }
 
     const req = this.isEdit
       ? this.postService.updatePost(this.postId!, fd)

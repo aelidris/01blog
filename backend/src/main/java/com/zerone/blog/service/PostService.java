@@ -59,7 +59,7 @@ public class PostService {
         return mapperService.toPostDto(post, fullAuthor);
     }
 
-    public PostDto updatePost(User currentUser, Long postId, CreatePostRequest request, MultipartFile media) {
+    public PostDto updatePost(User currentUser, Long postId, CreatePostRequest request, MultipartFile media, boolean removeMedia) {
         Post post = findById(postId);
         assertPostAccessible(post, currentUser);
         assertOwner(currentUser, post);
@@ -67,8 +67,18 @@ public class PostService {
         post.setDescription(request.getDescription());
         post.setUpdatedAt(LocalDateTime.now());
 
+        if (removeMedia) {
+            if (post.getMediaUrl() != null) {
+                fileStorageService.deleteFile(post.getMediaUrl());
+                post.setMediaUrl(null);
+                post.setMediaType(null);
+            }
+        }
+
         if (media != null && !media.isEmpty()) {
-            if (post.getMediaUrl() != null) fileStorageService.deleteFile(post.getMediaUrl());
+            if (post.getMediaUrl() != null) {
+                fileStorageService.deleteFile(post.getMediaUrl());
+            }
             String url = fileStorageService.storeFile(media);
             post.setMediaUrl(url);
             post.setMediaType(media.getContentType());
