@@ -113,7 +113,7 @@ export class BlockComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute, private userService: UserService,
     private postService: PostService, public auth: AuthService,
     private dialog: MatDialog, private snack: MatSnackBar, private router: Router,
-    private http: HttpClient // <-- Injécti HttpClient hna
+    private http: HttpClient
   ) {}
 
   ngOnInit() {

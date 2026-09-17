@@ -1,7 +1,7 @@
 package com.zerone.blog.service;
 
 import com.zerone.blog.exception.BadRequestException;
-import org.apache.tika.Tika; // <--- Zyd Had l-import
+import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
