@@ -1,6 +1,7 @@
 package com.zerone.blog.service;
 
 import com.zerone.blog.exception.BadRequestException;
+import org.apache.tika.Tika; // <--- Zyd Had l-import
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +19,8 @@ public class FileStorageService {
     private String uploadDir;
 
     private static final long MAX_SIZE = 50 * 1024 * 1024L;
+    
+    private final Tika tika = new Tika();
 
     public Resource loadFileAsResource(String filename) {
         try {
@@ -49,6 +52,21 @@ public class FileStorageService {
         if (!isJpgOrPng && !isMp4) {
             throw new BadRequestException("Only JPEG, PNG images and MP4 videos are allowed");
         }
+
+        // --- APACHE TIKA CONTENT TYPE VALIDATION ---
+        try {
+            String detectedType = tika.detect(file.getInputStream());
+            
+            boolean isValidImage = isJpgOrPng && (detectedType.equals("image/jpeg") || detectedType.equals("image/png"));
+            boolean isValidVideo = isMp4 && detectedType.equals("video/mp4");
+
+            if (!isValidImage && !isValidVideo) {
+                throw new BadRequestException("File content does not match its extension or format is not supported");
+            }
+        } catch (IOException e) {
+            throw new BadRequestException("Failed to analyze file content");
+        }
+        // -------------------------------------------
 
         String ext = lower.substring(lower.lastIndexOf('.'));
         String filename = UUID.randomUUID() + ext;

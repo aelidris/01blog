@@ -163,7 +163,8 @@ export class EditProfileComponent implements OnInit, OnDestroy {
       },
       error: (err) => { 
         console.error('Upload failed error:', err); 
-        this.snack.open('Upload failed', 'Close', { duration: 2000 }); 
+        const errorMessage = err.error?.message || err.error?.error || 'File content does not match its extension or format is not supported';
+        this.snack.open(errorMessage, 'Close', { duration: 5000 }); 
         this.uploading = false; 
       }
     });
