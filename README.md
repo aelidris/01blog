@@ -54,17 +54,7 @@ A fullstack social blogging platform built with **Spring Boot** (backend) and **
 
 Choose **one** of the methods below depending on how you run PostgreSQL:
 
-* **Option A: Using Docker (Recommended if you don't have local root access)**
-  Run this container command. It will automatically create the `blog01` database for you:
-  ```bash
-  docker run --name local-postgres \
-    -e POSTGRES_DB=blog01 \
-    -e POSTGRES_USER=aelidris \
-    -e POSTGRES_PASSWORD=01blog_pass \
-    -p 5432:5432 \
-    -d postgres:15
-
-* **Option B: Using a Native Local PostgreSQL Installation**
+* **Using a Native Local PostgreSQL Installation**
   Run your local PostgreSQL service, connect to your database shell, and create the database:
   ```sql
   CREATE DATABASE blog01;
