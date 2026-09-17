@@ -75,10 +75,6 @@ The API will be available at `http://localhost:8080`.
 > UPDATE users SET role = 'ADMIN' WHERE username = 'your_username';
 > ```
 
-### Default Admin Account
-When the application starts for the first time, a default admin account is automatically created:
-* **Username:** `admin`
-* **Password:** `123456`
 
 
 ---
