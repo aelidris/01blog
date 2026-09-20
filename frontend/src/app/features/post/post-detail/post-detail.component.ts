@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,19 +9,42 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { HttpClient } from '@angular/common/http';
+import { Inject } from '@angular/core';
 import { PostService } from '../../../core/services/post.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Post } from '../../../core/models/post.model';
-import { RouterLink } from '@angular/router';
-import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+
+@Component({
+  selector: 'app-post-unavailable-dialog',
+  standalone: true,
+  imports: [MatDialogModule, MatButtonModule, RouterLink],
+  template: `
+    <h2 mat-dialog-title>Post Unavailable</h2>
+    <mat-dialog-content>
+      <p>{{ data.message }}</p>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-raised-button color="primary" routerLink="/feed" mat-dialog-close>
+        Back to Feed
+      </button>
+    </mat-dialog-actions>
+  `
+})
+export class PostUnavailableDialogComponent {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { message: string }) {}
+}
 
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatDividerModule, MatProgressSpinnerModule],
+  imports: [
+    CommonModule, ReactiveFormsModule, RouterLink, MatCardModule, 
+    MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, 
+    MatDividerModule, MatProgressSpinnerModule, MatDialogModule
+  ],
   template: `
-    <!-- Constrained to 1200px max-width, centered with padding and gap -->
     <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px; display: flex; flex-direction: column; gap: 16px;" *ngIf="post">
       <mat-card style="border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <mat-card-header>
@@ -36,9 +59,22 @@ import { HttpClient } from '@angular/common/http';
           <p style="font-size: 1rem; color: #333; line-height: 1.5; margin-top: 8px;">{{ post.description }}</p>
         </mat-card-content>
         <mat-card-actions>
+          <!-- Like Button -->
           <button mat-button (click)="toggleLike()" [color]="post.likedByCurrentUser ? 'primary' : ''">
             <mat-icon>{{ post.likedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon> {{ post.likeCount }}
           </button>
+
+          <span style="flex: 1"></span>
+
+          <!-- Owner Actions: Edit & Delete protected with safety checks -->
+          <ng-container *ngIf="isOwnerOrAdmin()">
+            <button mat-icon-button color="primary" (click)="onEdit()" title="Edit post">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="onDelete()" title="Delete post">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </ng-container>
         </mat-card-actions>
       </mat-card>
 
@@ -53,7 +89,7 @@ import { HttpClient } from '@angular/common/http';
               </div>
               <p style="margin: 0; font-size: 0.95rem; word-break: break-all; white-space: pre-wrap; color: #333;">{{ c.content }}</p>
             </div>
-            <button mat-icon-button color="warn" *ngIf="canDelete(c)" (click)="deleteComment(c.id)" title="Delete comment">
+            <button mat-icon-button color="warn" *ngIf="canDeleteComment(c)" (click)="deleteComment(c.id)" title="Delete comment">
               <mat-icon style="font-size: 20px; width: 20px; height: 20px;">delete_outline</mat-icon>
             </button>
           </div>
@@ -77,8 +113,13 @@ export class PostDetailComponent implements OnInit {
   secureMediaUrl: string | null = null;
 
   constructor(
-    private route: ActivatedRoute, private postService: PostService, private router: Router, private http: HttpClient,
-    public auth: AuthService, fb: FormBuilder
+    private route: ActivatedRoute, 
+    private postService: PostService, 
+    private router: Router, 
+    private http: HttpClient,
+    private dialog: MatDialog,
+    public auth: AuthService, 
+    fb: FormBuilder
   ) {
     this.commentForm = fb.group({ content: ['', [Validators.required, Validators.maxLength(1000)]] });
   }
@@ -96,12 +137,19 @@ export class PostDetailComponent implements OnInit {
         }
       },
       error: (err) => {
-        if (err.status == 403 || err.status == 404) {
-          this.router.navigate(['/feed']);
-        } else {
-          this.loading = false;
+        this.loading = false;
+        if (err.status === 403 || err.status === 404) {
+          this.showUnavailableDialog();
         }
       }
+    });
+  }
+
+  showUnavailableDialog() {
+    this.dialog.open(PostUnavailableDialogComponent, {
+      width: '400px',
+      disableClose: true,
+      data: { message: 'This post has been hidden or deleted by the administrator.' }
     });
   }
 
@@ -133,8 +181,8 @@ export class PostDetailComponent implements OnInit {
         this.post = updated;
       },
       error: (err) => {
-        if (err.status == 403 || err.status == 404 || (err.error && err.error.error === 'Post not found')) {
-          this.router.navigate(['/feed']);
+        if (err.status === 403 || err.status === 404 || (err.error && err.error.error === 'Post not found')) {
+          this.showUnavailableDialog();
         } else {
           console.error('Failed to toggle like', err);
         }
@@ -153,8 +201,8 @@ export class PostDetailComponent implements OnInit {
         this.commentForm.reset();
       },
       error: (err) => {
-        if (err.status == 403 || err.status == 404 || err.error === 'Post not found' || (err.error && err.error.error === 'Post not found')) {
-          this.router.navigate(['/feed']); 
+        if (err.status === 403 || err.status === 404 || err.error === 'Post not found' || (err.error && err.error.error === 'Post not found')) {
+          this.showUnavailableDialog(); 
         } else {
           console.error('Failed to add comment', err);
         }
@@ -162,12 +210,58 @@ export class PostDetailComponent implements OnInit {
     });
   }
 
-  deleteComment(commentId: number) {
-    this.postService.deleteComment(commentId).subscribe(() => {
-      this.post!.comments = this.post!.comments.filter(c => c.id !== commentId);
+  // Safe handler for Edit icon click
+  onEdit() {
+    if (!this.post) return;
+    // Verify post is still active before routing, or catch error from server
+    this.postService.getPost(this.post.id).subscribe({
+      next: () => {
+        this.router.navigate(['/posts', this.post!.id, 'edit']);
+      },
+      error: (err) => {
+        if (err.status === 403 || err.status === 404) {
+          this.showUnavailableDialog();
+        }
+      }
     });
   }
 
-  canDelete(c: any) { return this.auth.currentUser()?.id === c.author.id || this.auth.isAdmin(); }
-  mediaUrl() { return `http://localhost:8080${this.post?.mediaUrl}`; }
+  // Safe handler for Delete icon click
+  onDelete() {
+    if (!this.post) return;
+    
+    this.postService.deletePost(this.post.id).subscribe({
+      next: () => {
+        this.router.navigate(['/feed']);
+      },
+      error: (err) => {
+        if (err.status === 403 || err.status === 404) {
+          this.showUnavailableDialog();
+        } else {
+          console.error('Failed to delete post', err);
+        }
+      }
+    });
+  }
+
+  deleteComment(commentId: number) {
+    this.postService.deleteComment(commentId).subscribe({
+      next: () => {
+        this.post!.comments = this.post!.comments.filter(c => c.id !== commentId);
+      },
+      error: (err) => {
+        if (err.status === 403 || err.status === 404) {
+          this.showUnavailableDialog();
+        }
+      }
+    });
+  }
+
+  isOwnerOrAdmin() { 
+    return this.auth.currentUser()?.id === this.post?.author?.id || this.auth.isAdmin(); 
+  }
+
+  canDeleteComment(c: any) { 
+    return this.auth.currentUser()?.id === c.author.id || this.auth.isAdmin(); 
+  }
 }

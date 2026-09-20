@@ -54,7 +54,8 @@ import { Router } from '@angular/router';
           [post]="post"
           (likeToggle)="toggleLike($event)"
           (deletePost)="deletePost($event)"
-          (reportUser)="openReport($event)">
+          (reportUser)="openReport($event)"
+          (postRemoved)="removePostFromList($event)">
         </app-post-card>
 
         <div style="text-align:center;margin:16px" *ngIf="!loading && !lastPage && posts.length > 0">
@@ -63,7 +64,7 @@ import { Router } from '@angular/router';
 
       </div>
 
-      <!-- Sidebar Column (Fills the side space cleanly) -->
+      <!-- Sidebar Column -->
       <aside style="width: 300px; flex-shrink: 0; display: none; @media(min-width: 850px){display: block;}">
         <mat-card style="padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
           <h3 style="margin-top: 0; font-size: 1.1rem; color: #333;">Welcome back!</h3>
@@ -154,5 +155,9 @@ export class FeedComponent implements OnInit, OnDestroy {
 
   openReport(userId: number) {
     this.dialog.open(ReportModalComponent, { data: { userId }, width: '450px' });
+  }
+
+  removePostFromList(postId: number) {
+    this.posts = this.posts.filter(p => p.id !== postId);
   }
 }

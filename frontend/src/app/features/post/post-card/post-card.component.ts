@@ -1,24 +1,46 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Post } from '../../../core/models/post.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { PostService } from '../../../core/services/post.service';
+
+@Component({
+  selector: 'app-post-unavailable-card-dialog',
+  standalone: true,
+  imports: [MatDialogModule, MatButtonModule],
+  template: `
+    <h2 mat-dialog-title>Post Unavailable</h2>
+    <mat-dialog-content>
+      <p>{{ data.message }}</p>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-raised-button color="primary" mat-dialog-close>
+        Back to Feed
+      </button>
+    </mat-dialog-actions>
+  `
+})
+export class PostUnavailableCardDialogComponent {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { message: string }) {}
+}
 
 @Component({
   selector: 'app-post-card',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatDividerModule, MatChipsModule],
+  imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatDividerModule, MatChipsModule, MatDialogModule],
   template: `
-    <mat-card>
+    
+    <mat-card *ngIf="!isUnavailable" style="margin-bottom: 16px;">
       <mat-card-header>
         <div mat-card-avatar style="background:#3f51b5;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;overflow:hidden">
-          <!-- Avatar secure (ila kayna) -->
           <img *ngIf="post.author?.avatarUrl && secureAvatarUrl" 
                [src]="secureAvatarUrl" 
                alt="{{ post.author.username }}"
@@ -48,17 +70,19 @@ import { AuthService } from '../../../core/services/auth.service';
       </mat-card-content>
 
       <mat-card-actions>
-        <button mat-button (click)="likeToggle.emit(post.id)" [color]="post.likedByCurrentUser ? 'primary' : ''">
+        <button mat-button (click)="onLikeToggle()" [color]="post.likedByCurrentUser ? 'primary' : ''">
           <mat-icon>{{ post.likedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
           {{ post.likeCount }}
         </button>
-        <a mat-button [routerLink]="['/posts', post.id]">
+        
+        <a mat-button (click)="onViewPost()">
           <mat-icon>comment</mat-icon> {{ post.comments.length }}
         </a>
+
         <span class="spacer"></span>
         <ng-container *ngIf="isOwner()">
-          <a mat-icon-button [routerLink]="['/posts', post.id, 'edit']"><mat-icon>edit</mat-icon></a>
-          <button mat-icon-button color="warn" (click)="deletePost.emit(post.id)"><mat-icon>delete</mat-icon></button>
+          <button mat-icon-button color="primary" (click)="onEdit()"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button color="warn" (click)="onDelete()"><mat-icon>delete</mat-icon></button>
         </ng-container>
         <button mat-icon-button (click)="reportUser.emit(post.author.id)" *ngIf="!isOwner()">
           <mat-icon>flag</mat-icon>
@@ -75,8 +99,15 @@ export class PostCardComponent implements OnInit, OnDestroy {
 
   secureMediaUrl: string | null = null;
   secureAvatarUrl: string | null = null;
+  isUnavailable = false;
 
-  constructor(private auth: AuthService, private http: HttpClient) {}
+  constructor(
+    private auth: AuthService, 
+    private http: HttpClient,
+    private dialog: MatDialog,
+    private router: Router,
+    private postService: PostService
+  ) {}
 
   ngOnInit() {
     if (this.post.mediaUrl) {
@@ -85,6 +116,64 @@ export class PostCardComponent implements OnInit, OnDestroy {
     if (this.post.author?.avatarUrl) {
       this.loadSecureFile(this.post.author.avatarUrl, 'avatar');
     }
+  }
+
+  @Output() postRemoved = new EventEmitter<number>();
+
+  showUnavailableDialog() {
+    const dialogRef = this.dialog.open(PostUnavailableCardDialogComponent, {
+      width: '400px',
+      disableClose: true,
+      data: { message: 'This post has been hidden or deleted by the administrator.' }
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      this.postRemoved.emit(this.post.id);
+    });
+  }
+
+  onLikeToggle() {
+    this.postService.toggleLike(this.post.id).subscribe({
+      next: () => this.likeToggle.emit(this.post.id),
+      error: (err) => {
+        if (err.status === 403 || err.status === 404) {
+          this.showUnavailableDialog();
+        }
+      }
+    });
+  }
+
+  onViewPost() {
+    this.postService.getPost(this.post.id).subscribe({
+      next: () => this.router.navigate(['/posts', this.post.id]),
+      error: (err) => {
+        if (err.status === 403 || err.status === 404) {
+          this.showUnavailableDialog();
+        }
+      }
+    });
+  }
+
+  onEdit() {
+    this.postService.getPost(this.post.id).subscribe({
+      next: () => this.router.navigate(['/posts', this.post.id, 'edit']),
+      error: (err) => {
+        if (err.status === 403 || err.status === 404) {
+          this.showUnavailableDialog();
+        }
+      }
+    });
+  }
+
+  onDelete() {
+    this.postService.deletePost(this.post.id).subscribe({
+      next: () => this.deletePost.emit(this.post.id),
+      error: (err) => {
+        if (err.status === 403 || err.status === 404) {
+          this.showUnavailableDialog();
+        }
+      }
+    });
   }
 
   loadSecureFile(urlPath: string, type: 'media' | 'avatar') {
