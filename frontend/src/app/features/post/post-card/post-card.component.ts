@@ -37,8 +37,7 @@ export class PostUnavailableCardDialogComponent {
   standalone: true,
   imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatDividerModule, MatChipsModule, MatDialogModule],
   template: `
-    
-    <mat-card *ngIf="!isUnavailable" style="margin-bottom: 16px;">
+    <mat-card style="margin-bottom: 16px;">
       <mat-card-header>
         <div mat-card-avatar style="background:#3f51b5;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;overflow:hidden">
           <img *ngIf="post.author?.avatarUrl && secureAvatarUrl" 
@@ -70,12 +69,12 @@ export class PostUnavailableCardDialogComponent {
       </mat-card-content>
 
       <mat-card-actions>
-        <button mat-button (click)="onLikeToggle()" [color]="post.likedByCurrentUser ? 'primary' : ''">
+        <button mat-button (click)="likeToggle.emit(post.id)" [color]="post.likedByCurrentUser ? 'primary' : ''">
           <mat-icon>{{ post.likedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
           {{ post.likeCount }}
         </button>
         
-        <a mat-button (click)="onViewPost()">
+        <a mat-button [routerLink]="['/posts', post.id]">
           <mat-icon>comment</mat-icon> {{ post.comments.length }}
         </a>
 
@@ -84,7 +83,8 @@ export class PostUnavailableCardDialogComponent {
           <button mat-icon-button color="primary" (click)="onEdit()"><mat-icon>edit</mat-icon></button>
           <button mat-icon-button color="warn" (click)="onDelete()"><mat-icon>delete</mat-icon></button>
         </ng-container>
-        <button mat-icon-button (click)="reportUser.emit(post.author.id)" *ngIf="!isOwner()">
+
+        <button mat-icon-button (click)="onReport()" *ngIf="!isOwner()">
           <mat-icon>flag</mat-icon>
         </button>
       </mat-card-actions>
@@ -96,10 +96,10 @@ export class PostCardComponent implements OnInit, OnDestroy {
   @Output() likeToggle = new EventEmitter<number>();
   @Output() deletePost = new EventEmitter<number>();
   @Output() reportUser = new EventEmitter<number>();
+  @Output() postRemoved = new EventEmitter<number>();
 
   secureMediaUrl: string | null = null;
   secureAvatarUrl: string | null = null;
-  isUnavailable = false;
 
   constructor(
     private auth: AuthService, 
@@ -118,8 +118,6 @@ export class PostCardComponent implements OnInit, OnDestroy {
     }
   }
 
-  @Output() postRemoved = new EventEmitter<number>();
-
   showUnavailableDialog() {
     const dialogRef = this.dialog.open(PostUnavailableCardDialogComponent, {
       width: '400px',
@@ -129,28 +127,6 @@ export class PostCardComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(() => {
       this.postRemoved.emit(this.post.id);
-    });
-  }
-
-  onLikeToggle() {
-    this.postService.toggleLike(this.post.id).subscribe({
-      next: () => this.likeToggle.emit(this.post.id),
-      error: (err) => {
-        if (err.status === 403 || err.status === 404) {
-          this.showUnavailableDialog();
-        }
-      }
-    });
-  }
-
-  onViewPost() {
-    this.postService.getPost(this.post.id).subscribe({
-      next: () => this.router.navigate(['/posts', this.post.id]),
-      error: (err) => {
-        if (err.status === 403 || err.status === 404) {
-          this.showUnavailableDialog();
-        }
-      }
     });
   }
 
@@ -168,6 +144,17 @@ export class PostCardComponent implements OnInit, OnDestroy {
   onDelete() {
     this.postService.deletePost(this.post.id).subscribe({
       next: () => this.deletePost.emit(this.post.id),
+      error: (err) => {
+        if (err.status === 403 || err.status === 404) {
+          this.showUnavailableDialog();
+        }
+      }
+    });
+  }
+
+  onReport() {
+    this.postService.getPost(this.post.id).subscribe({
+      next: () => this.reportUser.emit(this.post.author.id),
       error: (err) => {
         if (err.status === 403 || err.status === 404) {
           this.showUnavailableDialog();
