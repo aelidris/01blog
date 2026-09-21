@@ -122,11 +122,9 @@ export class FeedComponent implements OnInit, OnDestroy {
       error: (err) => {
         if (err.status === 403 || err.status === 404) {
           this.posts = this.posts.filter(p => p.id !== postId);
-          this.snack.open('This post has been hidden or deleted by the administrator.', 'Close', {
-            duration: 3000
-          });
+          this.snack.open('This post is hidden or unavailable.', 'Close', { duration: 3000 });
         } else {
-          console.error('Failed to toggle like', err);
+          this.snack.open('Like failed', 'Close', { duration: 2000 });
         }
       }
     });

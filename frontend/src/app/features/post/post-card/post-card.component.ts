@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, Inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
@@ -7,35 +7,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatDialog, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Post } from '../../../core/models/post.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { PostService } from '../../../core/services/post.service';
 
 @Component({
-  selector: 'app-post-unavailable-card-dialog',
-  standalone: true,
-  imports: [MatDialogModule, MatButtonModule],
-  template: `
-    <h2 mat-dialog-title>Post Unavailable</h2>
-    <mat-dialog-content>
-      <p>{{ data.message }}</p>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-raised-button color="primary" mat-dialog-close>
-        Back to Feed
-      </button>
-    </mat-dialog-actions>
-  `
-})
-export class PostUnavailableCardDialogComponent {
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { message: string }) {}
-}
-
-@Component({
   selector: 'app-post-card',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatDividerModule, MatChipsModule, MatDialogModule],
+  imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatDividerModule, MatChipsModule],
   template: `
     <mat-card style="margin-bottom: 16px;">
       <mat-card-header>
@@ -66,17 +45,21 @@ export class PostUnavailableCardDialogComponent {
 
       <mat-card-content>
         <p>{{ post.description }}</p>
+        <!-- Error Message Banner -->
+        <p *ngIf="errorMessage" style="color: #f44336; font-size: 14px; margin-top: 8px; font-weight: 500;">
+          {{ errorMessage }}
+        </p>
       </mat-card-content>
 
       <mat-card-actions>
-        <button mat-button (click)="likeToggle.emit(post.id)" [color]="post.likedByCurrentUser ? 'primary' : ''">
+        <button mat-button (click)="onLike()" [color]="post.likedByCurrentUser ? 'primary' : ''">
           <mat-icon>{{ post.likedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon>
           {{ post.likeCount }}
         </button>
         
-        <a mat-button [routerLink]="['/posts', post.id]">
+        <button mat-button (click)="onCommentClick()">
           <mat-icon>comment</mat-icon> {{ post.comments.length }}
-        </a>
+        </button>
 
         <span class="spacer"></span>
         <ng-container *ngIf="isOwner()">
@@ -100,11 +83,11 @@ export class PostCardComponent implements OnInit, OnDestroy {
 
   secureMediaUrl: string | null = null;
   secureAvatarUrl: string | null = null;
+  errorMessage: string | null = null;
 
   constructor(
     private auth: AuthService, 
     private http: HttpClient,
-    private dialog: MatDialog,
     private router: Router,
     private postService: PostService
   ) {}
@@ -118,48 +101,58 @@ export class PostCardComponent implements OnInit, OnDestroy {
     }
   }
 
-  showUnavailableDialog() {
-    const dialogRef = this.dialog.open(PostUnavailableCardDialogComponent, {
-      width: '400px',
-      disableClose: true,
-      data: { message: 'This post has been hidden or deleted by the administrator.' }
-    });
+  handleActionError(err: any) {
+    if (err.status === 403 || err.status === 404) {
+      this.errorMessage = 'This post has been hidden or is no longer available.';
+      setTimeout(() => {
+        this.postRemoved.emit(this.post.id);
+      }, 3000);
+    }
+  }
 
-    dialogRef.afterClosed().subscribe(() => {
-      this.postRemoved.emit(this.post.id);
+  onCommentClick() {
+    this.postService.getPost(this.post.id).subscribe({
+      next: () => {
+        this.router.navigate(['/posts', this.post.id]);
+      },
+      error: (err) => {
+        if (err.status === 403 || err.status === 404) {
+          this.errorMessage = 'This post has been hidden or is no longer available.';
+          setTimeout(() => {
+            this.postRemoved.emit(this.post.id);
+          }, 3000);
+        }
+      }
+    });
+  }
+
+  onLike() {
+    this.postService.toggleLike(this.post.id).subscribe({
+      next: (updatedPost) => {
+        this.post = updatedPost;
+      },
+      error: (err) => this.handleActionError(err)
     });
   }
 
   onEdit() {
     this.postService.getPost(this.post.id).subscribe({
       next: () => this.router.navigate(['/posts', this.post.id, 'edit']),
-      error: (err) => {
-        if (err.status === 403 || err.status === 404) {
-          this.showUnavailableDialog();
-        }
-      }
+      error: (err) => this.handleActionError(err)
     });
   }
 
   onDelete() {
     this.postService.deletePost(this.post.id).subscribe({
       next: () => this.deletePost.emit(this.post.id),
-      error: (err) => {
-        if (err.status === 403 || err.status === 404) {
-          this.showUnavailableDialog();
-        }
-      }
+      error: (err) => this.handleActionError(err)
     });
   }
 
   onReport() {
     this.postService.getPost(this.post.id).subscribe({
       next: () => this.reportUser.emit(this.post.author.id),
-      error: (err) => {
-        if (err.status === 403 || err.status === 404) {
-          this.showUnavailableDialog();
-        }
-      }
+      error: (err) => this.handleActionError(err)
     });
   }
 

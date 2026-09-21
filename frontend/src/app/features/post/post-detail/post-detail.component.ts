@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -9,32 +9,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDialog, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
-import { Inject } from '@angular/core';
 import { PostService } from '../../../core/services/post.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Post } from '../../../core/models/post.model';
-
-@Component({
-  selector: 'app-post-unavailable-dialog',
-  standalone: true,
-  imports: [MatDialogModule, MatButtonModule, RouterLink],
-  template: `
-    <h2 mat-dialog-title>Post Unavailable</h2>
-    <mat-dialog-content>
-      <p>{{ data.message }}</p>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-raised-button color="primary" routerLink="/feed" mat-dialog-close>
-        Back to Feed
-      </button>
-    </mat-dialog-actions>
-  `
-})
-export class PostUnavailableDialogComponent {
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { message: string }) {}
-}
 
 @Component({
   selector: 'app-post-detail',
@@ -42,23 +20,31 @@ export class PostUnavailableDialogComponent {
   imports: [
     CommonModule, ReactiveFormsModule, RouterLink, MatCardModule, 
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, 
-    MatDividerModule, MatProgressSpinnerModule, MatDialogModule
+    MatDividerModule, MatProgressSpinnerModule
   ],
   template: `
-    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px; display: flex; flex-direction: column; gap: 16px;" *ngIf="post">
-      <mat-card style="border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <div style="max-width: 1200px; margin: 24px auto; padding: 0 16px; display: flex; flex-direction: column; gap: 16px;">
+      
+      <mat-card *ngIf="post" style="border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <mat-card-header>
           <mat-card-title><a [routerLink]="['/block', post.author.username]" style="color: #3f51b5; text-decoration: none;">{{ post.author.username }}</a></mat-card-title>
           <mat-card-subtitle>{{ post.createdAt | date:'medium' }}</mat-card-subtitle>
         </mat-card-header>
+        
         <ng-container *ngIf="secureMediaUrl">
           <img *ngIf="post?.mediaType?.startsWith('image/')" mat-card-image [src]="secureMediaUrl" style="width: 100%; height: auto; max-height: 500px; object-fit: contain; border-radius: 8px; display: block;">
           <video *ngIf="!post?.mediaType?.startsWith('image/')" mat-card-image controls style="width:100%"><source [src]="secureMediaUrl"></video>
         </ng-container>
+
         <mat-card-content>
           <p style="font-size: 1rem; color: #333; line-height: 1.5; margin-top: 8px;">{{ post.description }}</p>
+          
+          <p *ngIf="errorMessage" style="color: #f44336; font-size: 14px; margin-top: 12px; font-weight: 500;">
+            {{ errorMessage }}
+          </p>
         </mat-card-content>
-        <mat-card-actions>
+
+        <mat-card-actions *ngIf="!errorMessage">
           <!-- Like Button -->
           <button mat-button (click)="toggleLike()" [color]="post.likedByCurrentUser ? 'primary' : ''">
             <mat-icon>{{ post.likedByCurrentUser ? 'favorite' : 'favorite_border' }}</mat-icon> {{ post.likeCount }}
@@ -66,7 +52,7 @@ export class PostUnavailableDialogComponent {
 
           <span style="flex: 1"></span>
 
-          <!-- Owner Actions: Edit & Delete protected with safety checks -->
+          <!-- Owner Actions -->
           <ng-container *ngIf="isOwnerOrAdmin()">
             <button mat-icon-button color="primary" (click)="onEdit()" title="Edit post">
               <mat-icon>edit</mat-icon>
@@ -78,7 +64,8 @@ export class PostUnavailableDialogComponent {
         </mat-card-actions>
       </mat-card>
 
-      <mat-card style="border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+      <!-- Comments Card -->
+      <mat-card *ngIf="post && !errorMessage" style="border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <mat-card-header><mat-card-title style="font-size: 1.1rem; font-weight: 600;">Comments ({{ post.comments.length }})</mat-card-title></mat-card-header>
         <mat-card-content style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
           <div *ngFor="let c of post.comments" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; background: #fafafa; border-radius: 8px; border: 1px solid #eee;">
@@ -93,6 +80,7 @@ export class PostUnavailableDialogComponent {
               <mat-icon style="font-size: 20px; width: 20px; height: 20px;">delete_outline</mat-icon>
             </button>
           </div>
+          
           <form [formGroup]="commentForm" (ngSubmit)="addComment()" style="display:flex; gap:8px; margin-top:16px;" *ngIf="auth.isLoggedIn()">
             <mat-form-field appearance="outline" style="flex:1">
               <mat-label>Add a comment...</mat-label>
@@ -102,22 +90,23 @@ export class PostUnavailableDialogComponent {
           </form>
         </mat-card-content>
       </mat-card>
+
     </div>
-    <div *ngIf="!post && loading" style="text-align:center;padding:48px"><mat-spinner [diameter]="40" style="margin:auto"></mat-spinner></div>
+    <div *ngIf="!post && loading && !errorMessage" style="text-align:center;padding:48px"><mat-spinner [diameter]="40" style="margin:auto"></mat-spinner></div>
   `
 })
-export class PostDetailComponent implements OnInit {
+export class PostDetailComponent implements OnInit, OnDestroy {
   post: Post | null = null;
   loading = true;
   commentForm: FormGroup;
   secureMediaUrl: string | null = null;
+  errorMessage: string | null = null;
 
   constructor(
     private route: ActivatedRoute, 
     private postService: PostService, 
     private router: Router, 
     private http: HttpClient,
-    private dialog: MatDialog,
     public auth: AuthService, 
     fb: FormBuilder
   ) {
@@ -139,18 +128,17 @@ export class PostDetailComponent implements OnInit {
       error: (err) => {
         this.loading = false;
         if (err.status === 403 || err.status === 404) {
-          this.showUnavailableDialog();
+          this.handleUnavailableError();
         }
       }
     });
   }
 
-  showUnavailableDialog() {
-    this.dialog.open(PostUnavailableDialogComponent, {
-      width: '400px',
-      disableClose: true,
-      data: { message: 'This post has been hidden or deleted by the administrator.' }
-    });
+  handleUnavailableError() {
+    this.errorMessage = 'This post has been hidden or is no longer available.';
+    setTimeout(() => {
+      this.router.navigate(['/feed']);
+    }, 3000);
   }
 
   loadSecureMedia(mediaUrl: string) {
@@ -181,8 +169,8 @@ export class PostDetailComponent implements OnInit {
         this.post = updated;
       },
       error: (err) => {
-        if (err.status === 403 || err.status === 404 || (err.error && err.error.error === 'Post not found')) {
-          this.showUnavailableDialog();
+        if (err.status === 403 || err.status === 404) {
+          this.handleUnavailableError();
         } else {
           console.error('Failed to toggle like', err);
         }
@@ -201,8 +189,8 @@ export class PostDetailComponent implements OnInit {
         this.commentForm.reset();
       },
       error: (err) => {
-        if (err.status === 403 || err.status === 404 || err.error === 'Post not found' || (err.error && err.error.error === 'Post not found')) {
-          this.showUnavailableDialog(); 
+        if (err.status === 403 || err.status === 404) {
+          this.handleUnavailableError(); 
         } else {
           console.error('Failed to add comment', err);
         }
@@ -210,23 +198,20 @@ export class PostDetailComponent implements OnInit {
     });
   }
 
-  // Safe handler for Edit icon click
   onEdit() {
     if (!this.post) return;
-    // Verify post is still active before routing, or catch error from server
     this.postService.getPost(this.post.id).subscribe({
       next: () => {
         this.router.navigate(['/posts', this.post!.id, 'edit']);
       },
       error: (err) => {
         if (err.status === 403 || err.status === 404) {
-          this.showUnavailableDialog();
+          this.handleUnavailableError();
         }
       }
     });
   }
 
-  // Safe handler for Delete icon click
   onDelete() {
     if (!this.post) return;
     
@@ -236,7 +221,7 @@ export class PostDetailComponent implements OnInit {
       },
       error: (err) => {
         if (err.status === 403 || err.status === 404) {
-          this.showUnavailableDialog();
+          this.handleUnavailableError();
         } else {
           console.error('Failed to delete post', err);
         }
@@ -247,11 +232,13 @@ export class PostDetailComponent implements OnInit {
   deleteComment(commentId: number) {
     this.postService.deleteComment(commentId).subscribe({
       next: () => {
-        this.post!.comments = this.post!.comments.filter(c => c.id !== commentId);
+        if (this.post) {
+          this.post.comments = this.post.comments.filter(c => c.id !== commentId);
+        }
       },
       error: (err) => {
         if (err.status === 403 || err.status === 404) {
-          this.showUnavailableDialog();
+          this.handleUnavailableError();
         }
       }
     });
