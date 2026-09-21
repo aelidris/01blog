@@ -81,11 +81,12 @@ import { Router } from '@angular/router';
       
       <div style="display: flex; flex-direction: column; gap: 20px;">
         <app-post-card
-          *ngFor="let post of posts"
+          *ngFor="let post of posts; trackBy: trackByPostId"
           [post]="post"
           (likeToggle)="toggleLike($event)"
           (deletePost)="deletePost($event)"
-          (reportUser)="openReport()">
+          (reportUser)="openReport()"
+          (postRemoved)="removePostFromList($event)">
         </app-post-card>
       </div>
 
@@ -178,8 +179,9 @@ export class BlockComponent implements OnInit, OnDestroy {
         this.posts = this.posts.map(p => p.id === postId ? updated : p);
       },
       error: (err) => {
-        if (err.status == 404 || (err.error && err.error.error === 'Post not found')) {
+        if (err.status === 403 || err.status === 404) {
           this.posts = this.posts.filter(p => p.id !== postId);
+          this.snack.open('This post is hidden or unavailable.', 'Close', { duration: 3000 });
         } else {
           console.error('Failed to toggle like', err);
         }
@@ -190,8 +192,27 @@ export class BlockComponent implements OnInit, OnDestroy {
   deletePost(postId: number) {
     if (!confirm('Delete this post?')) return;
     this.postService.deletePost(postId).subscribe({
-      next: () => { this.posts = this.posts.filter(p => p.id !== postId); this.snack.open('Deleted', 'Close', {duration: 2000}); }
+      next: () => { 
+        this.posts = this.posts.filter(p => p.id !== postId); 
+        this.snack.open('Deleted', 'Close', {duration: 2000}); 
+      },
+      error: (err) => {
+        if (err.status === 403 || err.status === 404) {
+          this.posts = this.posts.filter(p => p.id !== postId);
+          this.snack.open('This post is hidden or unavailable.', 'Close', { duration: 3000 });
+        } else {
+          this.snack.open('Delete failed', 'Close', { duration: 2000 });
+        }
+      }
     });
+  }
+
+  removePostFromList(postId: number) {
+    this.posts = this.posts.filter(p => p.id !== postId);
+  }
+
+  trackByPostId(index: number, post: Post): number {
+    return post.id;
   }
 
   openReport() {

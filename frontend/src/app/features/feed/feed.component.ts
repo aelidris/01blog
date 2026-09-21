@@ -20,17 +20,14 @@ import { Router } from '@angular/router';
   imports: [CommonModule, RouterLink, PostCardComponent, MatProgressSpinnerModule,
             MatDialogModule, MatSnackBarModule, MatButtonModule, MatIconModule, MatCardModule],
   template: `
-    <!-- Two-column modern feed layout -->
     <div style="max-width: 1200px; margin: 24px auto; display: flex; gap: 24px; padding: 0 16px;">
       
-      <!-- Main Feed Column -->
       <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px;">
 
         <div *ngIf="loading" style="text-align:center;padding:40px">
           <mat-spinner [diameter]="40" style="margin:auto"></mat-spinner>
         </div>
 
-        <!-- Empty feed CTA -->
         <div *ngIf="!loading && posts.length === 0"
              style="text-align:center;padding:60px 24px;background:white;border-radius:8px;border:1px solid #e0e0e0;box-shadow:0 1px 3px rgba(0,0,0,.02)">
           <mat-icon style="font-size:64px;width:64px;height:64px;color:#bdbdbd;margin-bottom:16px">dynamic_feed</mat-icon>
@@ -48,9 +45,8 @@ import { Router } from '@angular/router';
           </div>
         </div>
 
-        <!-- Feed List Container -->
         <app-post-card
-          *ngFor="let post of posts"
+          *ngFor="let post of posts; trackBy: trackByPostId"
           [post]="post"
           (likeToggle)="toggleLike($event)"
           (deletePost)="deletePost($event)"
@@ -64,7 +60,6 @@ import { Router } from '@angular/router';
 
       </div>
 
-      <!-- Sidebar Column -->
       <aside style="width: 300px; flex-shrink: 0; display: none; @media(min-width: 850px){display: block;}">
         <mat-card style="padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
           <h3 style="margin-top: 0; font-size: 1.1rem; color: #333;">Welcome back!</h3>
@@ -127,7 +122,9 @@ export class FeedComponent implements OnInit, OnDestroy {
       error: (err) => {
         if (err.status === 403 || err.status === 404) {
           this.posts = this.posts.filter(p => p.id !== postId);
-          this.snack.open('This post is hidden or unavailable.', 'Close', { duration: 3000 });
+          this.snack.open('This post has been hidden or deleted by the administrator.', 'Close', {
+            duration: 3000
+          });
         } else {
           console.error('Failed to toggle like', err);
         }
@@ -145,7 +142,7 @@ export class FeedComponent implements OnInit, OnDestroy {
       error: (err) => {
         if (err.status === 403 || err.status === 404) {
           this.posts = this.posts.filter(p => p.id !== postId);
-          this.snack.open('This post is hidden or unavailable.', 'Close', { duration: 3000 });
+          this.snack.open('This post has been hidden or unavailable.', 'Close', { duration: 3000 });
         } else {
           this.snack.open('Delete failed', 'Close', { duration: 2000 });
         }
@@ -159,5 +156,9 @@ export class FeedComponent implements OnInit, OnDestroy {
 
   removePostFromList(postId: number) {
     this.posts = this.posts.filter(p => p.id !== postId);
+  }
+
+  trackByPostId(index: number, post: Post): number {
+    return post.id;
   }
 }
