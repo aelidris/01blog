@@ -128,7 +128,13 @@ export class BlockComponent implements OnInit, OnDestroy {
         if (this.user.avatarUrl) {
           this.loadSecureAvatar(this.user.avatarUrl);
         }
-      } 
+      },
+      error: (err) => {
+        this.loading = false;
+        if (err.status === 403 || err.status === 404) {
+          this.router.navigate(['/feed']);
+        }
+      }
     });
   }
 
