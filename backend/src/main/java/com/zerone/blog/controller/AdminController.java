@@ -43,10 +43,8 @@ public class AdminController {
 
     // Posts
     @GetMapping("/posts")
-    public ResponseEntity<Page<PostDto>> getAllPosts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(adminService.getAllPosts(page, size));
+    public ResponseEntity<List<PostDto>> getAllPosts() {
+        return ResponseEntity.ok(adminService.getAllPosts());
     }
 
     @PostMapping("/posts/{id}/hide")

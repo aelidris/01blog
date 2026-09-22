@@ -65,9 +65,11 @@ public class AdminService {
         userRepository.delete(user);
     }
 
-    public Page<PostDto> getAllPosts(int page, int size) {
-        return postRepository.findAll(PageRequest.of(page, size, Sort.by("createdAt").descending()))
-                .map(p -> mapperService.toPostDto(p, null));
+    public List<PostDto> getAllPosts() {
+    return postRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
+            .stream()
+            .map(p -> mapperService.toPostDto(p, null))
+            .toList();
     }
 
     public PostDto hidePost(Long postId) {
