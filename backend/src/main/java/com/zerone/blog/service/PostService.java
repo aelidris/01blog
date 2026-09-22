@@ -180,11 +180,31 @@ public class PostService {
     }
 
     private void assertPostAccessible(Post post, User currentUser) {
+        // Check if the post is hidden
         if (post.isHidden()) {
             boolean isAdmin = currentUser != null && "ADMIN".equals(currentUser.getRole().name());
             if (!isAdmin) {
                 throw new UnauthorizedException("This post is hidden and unavailable.");
             }
+        }
+
+        // Check if subscription or ownership is required to view the post
+        if (currentUser == null) {
+            throw new UnauthorizedException("Authentication required");
+        }
+
+        boolean isAuthor = currentUser.getId().equals(post.getAuthor().getId());
+        boolean isAdmin = "ADMIN".equals(currentUser.getRole().name());
+        
+        // Reload current user with collections to check subscriptions accurately
+        User fullCurrent = userRepository.findWithCollectionsById(currentUser.getId())
+                .orElse(currentUser);
+        
+        boolean isSubscribed = fullCurrent.getSubscriptions().contains(post.getAuthor());
+
+        // If they aren't the author, admin, or a subscriber, block access (Throws 403)
+        if (!isAuthor && !isAdmin && !isSubscribed) {
+            throw new UnauthorizedException("You must subscribe to this user to view their posts.");
         }
     }
 }
